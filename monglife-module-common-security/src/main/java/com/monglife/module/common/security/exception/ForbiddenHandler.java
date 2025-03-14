@@ -2,9 +2,11 @@ package com.monglife.module.common.security.exception;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.monglife.module.common.security.response.SecurityResponse;
+import jakarta.servlet.annotation.HttpConstraint;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
@@ -13,6 +15,7 @@ import java.io.IOException;
 
 @AllArgsConstructor
 public class ForbiddenHandler implements AccessDeniedHandler {
+
 
     private final ObjectMapper objectMapper;
 
@@ -26,7 +29,7 @@ public class ForbiddenHandler implements AccessDeniedHandler {
      */
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException {
-        response.setContentType("application/json; charset=UTF-8");
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE); // "application/json; charset=UTF-8"
         response.setStatus(SecurityResponse.SECURITY_FORBIDDEN.getHttpStatus());
         response.getWriter().write(objectMapper.writeValueAsString(SecurityResponse.SECURITY_FORBIDDEN.toResponseDto()));
     }

@@ -5,6 +5,7 @@ import com.monglife.module.common.security.response.SecurityResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
@@ -25,7 +26,7 @@ public class UnAuthorizationHandler implements AuthenticationEntryPoint {
      */
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
-        response.setContentType("application/json; charset=UTF-8");
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE); // "application/json; charset=UTF-8"
         response.setStatus(SecurityResponse.SECURITY_UNAUTHORIZED.getHttpStatus());
         response.getWriter().write(objectMapper.writeValueAsString(SecurityResponse.SECURITY_UNAUTHORIZED.toResponseDto()));
     }

@@ -8,6 +8,7 @@ import com.monglife.module.common.security.exception.ForbiddenHandler;
 import com.monglife.module.common.security.exception.UnAuthorizationHandler;
 import com.monglife.core.enums.role.RoleCode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -62,22 +63,22 @@ public class SecurityAutoConfig {
     }
 
     @Bean
-    public UnAuthorizationHandler unAuthorizationHandler(ObjectMapper objectMapper) {
+    public UnAuthorizationHandler unAuthorizationHandler(@Qualifier("moduleSecurityObjectMapper") ObjectMapper objectMapper) {
         return new UnAuthorizationHandler(objectMapper);
     }
 
     @Bean
-    public ForbiddenHandler forbiddenHandler(ObjectMapper objectMapper) {
+    public ForbiddenHandler forbiddenHandler(@Qualifier("moduleSecurityObjectMapper") ObjectMapper objectMapper) {
         return new ForbiddenHandler(objectMapper);
     }
 
     @Bean
-    public GlobalExceptionFilter securityExceptionHandler(ObjectMapper objectMapper) {
+    public GlobalExceptionFilter securityExceptionHandler(@Qualifier("moduleSecurityObjectMapper") ObjectMapper objectMapper) {
         return new GlobalExceptionFilter(objectMapper);
     }
 
     @Bean
-    public PassportFilter passportFilter(ObjectMapper objectMapper) {
+    public PassportFilter passportFilter(@Qualifier("moduleSecurityObjectMapper") ObjectMapper objectMapper) {
         return new PassportFilter(objectMapper);
     }
 
