@@ -1,0 +1,3 @@
+com.monglife.module.common.jpa.config.HibernateAutoConfig
+com.monglife.module.common.jpa.config.JpaAuditingAutoConfig
+com.monglife.module.common.jpa.config.MultiTransactionAutoConfig

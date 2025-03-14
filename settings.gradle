@@ -1,0 +1,7 @@
+rootProject.name = 'monglife-module-common'
+
+include 'monglife-module-common-kafka'
+include 'monglife-module-common-feign'
+include 'monglife-module-common-jpa'
+include 'monglife-module-common-logging'
+include 'monglife-module-common-security'
