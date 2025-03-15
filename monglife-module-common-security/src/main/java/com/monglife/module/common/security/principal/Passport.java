@@ -9,7 +9,6 @@ import org.springframework.security.core.userdetails.User;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter

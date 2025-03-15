@@ -2,7 +2,6 @@ package com.monglife.module.common.security.exception;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.monglife.module.common.security.response.SecurityResponse;
-import jakarta.servlet.annotation.HttpConstraint;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
