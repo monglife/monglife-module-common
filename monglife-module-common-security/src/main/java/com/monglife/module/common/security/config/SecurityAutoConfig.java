@@ -2,15 +2,13 @@ package com.monglife.module.common.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.monglife.module.common.security.filter.GlobalExceptionFilter;
-import com.monglife.module.common.security.filter.PassportFilter;
+import com.monglife.core.enums.role.RoleCode;
 import com.monglife.module.common.security.exception.ForbiddenHandler;
 import com.monglife.module.common.security.exception.UnAuthorizationHandler;
-import com.monglife.core.enums.role.RoleCode;
+import com.monglife.module.common.security.filter.GlobalExceptionFilter;
+import com.monglife.module.common.security.filter.PassportFilter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,14 +23,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 @AutoConfiguration
 public class SecurityAutoConfig {
-
-    @Bean(name = "moduleSecurityObjectMapper")
-    @ConditionalOnMissingBean(name = "moduleSecurityObjectMapper")
-    public ObjectMapper objectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        return objectMapper;
-    }
 
     @Bean
     public SecurityFilterChain filterChain(
@@ -63,22 +53,30 @@ public class SecurityAutoConfig {
     }
 
     @Bean
-    public UnAuthorizationHandler unAuthorizationHandler(@Qualifier("moduleSecurityObjectMapper") ObjectMapper objectMapper) {
+    public UnAuthorizationHandler unAuthorizationHandler() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
         return new UnAuthorizationHandler(objectMapper);
     }
 
     @Bean
-    public ForbiddenHandler forbiddenHandler(@Qualifier("moduleSecurityObjectMapper") ObjectMapper objectMapper) {
+    public ForbiddenHandler forbiddenHandler() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
         return new ForbiddenHandler(objectMapper);
     }
 
     @Bean
-    public GlobalExceptionFilter securityExceptionHandler(@Qualifier("moduleSecurityObjectMapper") ObjectMapper objectMapper) {
+    public GlobalExceptionFilter securityExceptionHandler() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
         return new GlobalExceptionFilter(objectMapper);
     }
 
     @Bean
-    public PassportFilter passportFilter(@Qualifier("moduleSecurityObjectMapper") ObjectMapper objectMapper) {
+    public PassportFilter passportFilter() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
         return new PassportFilter(objectMapper);
     }
 
