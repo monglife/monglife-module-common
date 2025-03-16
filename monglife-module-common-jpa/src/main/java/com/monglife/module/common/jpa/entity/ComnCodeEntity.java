@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "comn_code")
+@Table(name = "monglife_comn_code")
 public class ComnCodeEntity {
 
     @Id
