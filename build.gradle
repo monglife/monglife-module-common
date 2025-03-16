@@ -11,7 +11,7 @@ bootJar {
 
 allprojects {
     group = 'com.monglife.module.common'
-    version = '1.0.3'
+    version = '1.0.4'
 
     repositories {
         mavenCentral()
