@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "group_code")
+@Table(name = "monglife_group_code")
 public class GroupCodeEntity {
 
     @Id
