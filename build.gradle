@@ -5,6 +5,10 @@ plugins {
     id 'maven-publish'
 }
 
+jar {
+    enabled(false)
+}
+
 bootJar {
     enabled(false)
 }
