@@ -42,7 +42,7 @@ public class KafkaAutoConfig {
     }
 
     @Bean(name = "kafkaModuleErrorHandler")
-    @ConditionalOnMissingBean({ KafkaModuleErrorHandler.class })
+    @ConditionalOnMissingBean(name = "kafkaModuleErrorHandler")
     public KafkaModuleErrorHandler kafkaModuleErrorHandler() {
         return new KafkaModuleErrorHandler();
     }
@@ -58,8 +58,8 @@ public class KafkaAutoConfig {
         props.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaModuleProperties.getGroupId());
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, TransactionEventDeserializer.class);
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, kafkaModuleProperties.getAutoOffsetResetConfig());
+        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, kafkaModuleProperties.getIsolationLevelConfig());
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.monglife.module.common.kafka.event");
 
         return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new TransactionEventDeserializer<>(objectMapper));
