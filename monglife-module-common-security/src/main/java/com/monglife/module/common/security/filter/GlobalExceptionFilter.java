@@ -39,7 +39,7 @@ public class GlobalExceptionFilter extends GenericFilterBean {
             chain.doFilter(request, response);
         } catch (Exception e) {
             ResponseDto<Map<String, Object>> responseDto = GlobalResponse.INTERNAL_SERVER_ERROR.toResponseDto(Collections.singletonMap("error", e.getMessage()));
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE); // "application/json; charset=UTF-8"
+            response.setContentType("application/json; charset=UTF-8");
             response.setStatus(GlobalResponse.INTERNAL_SERVER_ERROR.getHttpStatus());
             response.getWriter().write(objectMapper.writeValueAsString(responseDto));
         }

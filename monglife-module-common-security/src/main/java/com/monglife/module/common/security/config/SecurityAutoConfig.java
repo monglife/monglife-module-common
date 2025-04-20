@@ -41,7 +41,6 @@ public class SecurityAutoConfig {
             .authorizeHttpRequests(authorize -> authorize
                     .requestMatchers("/prometheus").permitAll()
                     .requestMatchers("/open/**").permitAll()
-                    .requestMatchers("/internal/**").permitAll()
                     .requestMatchers("/**").hasAnyAuthority(RoleCode.ADMIN.getRole(), RoleCode.NORMAL.getRole())
                     .anyRequest().authenticated()
             )
