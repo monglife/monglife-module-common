@@ -43,7 +43,7 @@ public class PassportFilter extends GenericFilterBean {
 
         String passportJson = request.getHeader("passport");
 
-        String profile = System.getProperty("spring.config.activate.on-profile");
+        String profile = System.getProperty("spring.profiles.active");
 
         if ("dev".equals(profile) && passportJson == null) {
             PassportVo passportVo = PassportVo.builder()
