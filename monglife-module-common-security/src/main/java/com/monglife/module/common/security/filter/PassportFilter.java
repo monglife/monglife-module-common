@@ -6,8 +6,8 @@ import com.monglife.core.utils.CommonUtil;
 import com.monglife.core.vo.passport.PassportDataAccountVo;
 import com.monglife.core.vo.passport.PassportDataAppVersionVo;
 import com.monglife.core.vo.passport.PassportDataVo;
-import com.monglife.module.common.security.principal.Passport;
 import com.monglife.core.vo.passport.PassportVo;
+import com.monglife.module.common.security.principal.Passport;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -43,17 +43,15 @@ public class PassportFilter extends GenericFilterBean {
 
         String passportJson = request.getHeader("passport");
 
-        String profile = System.getProperty("spring.profiles.active");
-
-        if ("dev".equals(profile) && passportJson == null) {
+        if ("dev".equals(System.getProperty("spring.profiles.active")) && passportJson == null) {
             PassportVo passportVo = PassportVo.builder()
                     .data(PassportDataVo.builder()
                             .account(PassportDataAccountVo.builder()
                                     .accountId(0L)
                                     .deviceId(CommonUtil.randomId())
-                                    .email("mongs@dev.monglife.com")
+                                    .email("mongs@monglife.com")
                                     .name("mongs")
-                                    .role(RoleCode.NORMAL.getName())
+                                    .role(RoleCode.NORMAL.getRole())
                                     .build())
                             .appVersion(PassportDataAppVersionVo.builder()
                                     .appPackageName("com.mongs.wear")
