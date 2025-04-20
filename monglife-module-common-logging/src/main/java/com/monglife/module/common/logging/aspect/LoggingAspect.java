@@ -86,7 +86,7 @@ public class LoggingAspect {
         String message = exception.getMessage();
 
         if (exception instanceof ErrorException errorException) {
-            message = errorException.getResponse() == null ? "" : errorException.getResponse().getMessage();
+            message = errorException.getErrorCode() == null ? "" : errorException.getErrorCode().getMessage();
         }
 
         log.error("\n[THROW] {}#{}\n{} : {}", clazzName, methodName, exception, message);
