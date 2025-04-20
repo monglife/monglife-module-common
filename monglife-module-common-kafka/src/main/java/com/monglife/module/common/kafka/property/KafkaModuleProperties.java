@@ -9,7 +9,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "module.kafka")
 public class KafkaModuleProperties {
 
-    private String url;
+    private String url = "localhost:9092";
 
-    private String groupId;
+    private String groupId = "default";
+
+    private String autoOffsetResetConfig = "earliest";
+
+    private String isolationLevelConfig = "read_committed";
 }

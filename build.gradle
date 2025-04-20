@@ -51,10 +51,21 @@ subprojects {
     dependencies {
         // monglife-core
         implementation 'com.github.monglife:monglife-core:2.0.7'
-
         // lombok
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
+        // JUnit 5
+        testImplementation 'org.junit.jupiter:junit-jupiter-api'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+        // mock
+        testImplementation 'org.mockito:mockito-core'
+        testImplementation 'org.mockito:mockito-junit-jupiter'
+        // AssertJ
+        testImplementation 'org.assertj:assertj-core'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
     }
 
     publishing {
