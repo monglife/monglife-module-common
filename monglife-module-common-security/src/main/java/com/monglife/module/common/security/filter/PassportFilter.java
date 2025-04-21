@@ -48,7 +48,7 @@ public class PassportFilter extends GenericFilterBean {
                     .data(PassportDataVo.builder()
                             .account(PassportDataAccountVo.builder()
                                     .accountId(0L)
-                                    .deviceId(CommonUtil.randomId())
+                                    .deviceId("mongs-test-device-id")
                                     .email("mongs@monglife.com")
                                     .name("mongs")
                                     .role(RoleCode.NORMAL.getRole())
