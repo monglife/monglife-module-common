@@ -9,6 +9,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -23,6 +24,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.listener.CommonErrorHandler;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
@@ -41,9 +43,9 @@ public class KafkaAutoConfig {
         return new KafkaTemplate<>(producerFactory);
     }
 
-    @Bean(name = "kafkaModuleErrorHandler")
-    @ConditionalOnMissingBean(name = "kafkaModuleErrorHandler")
-    public KafkaModuleErrorHandler kafkaModuleErrorHandler() {
+    @Bean
+    @ConditionalOnMissingBean(CommonErrorHandler.class)
+    public CommonErrorHandler kafkaModuleErrorHandler() {
         return new KafkaModuleErrorHandler();
     }
 
@@ -68,11 +70,11 @@ public class KafkaAutoConfig {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, TransactionEvent<Object>> kafkaListenerContainerFactory(
             @Qualifier("kafkaConsumerFactory") DefaultKafkaConsumerFactory<String, TransactionEvent<Object>> consumerFactory,
-            @Qualifier("kafkaModuleErrorHandler") KafkaModuleErrorHandler kafkaModuleErrorHandler
+            @Autowired CommonErrorHandler errorHandler
     ) {
         ConcurrentKafkaListenerContainerFactory<String, TransactionEvent<Object>> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
-        factory.setCommonErrorHandler(kafkaModuleErrorHandler);
+        factory.setCommonErrorHandler(errorHandler);
         return factory;
     }
 
