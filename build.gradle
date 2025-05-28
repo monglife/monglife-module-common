@@ -15,7 +15,7 @@ bootJar {
 
 allprojects {
     group = 'com.monglife.module.common'
-    version = '1.0.11'
+    version = '1.0.12'
 
     repositories {
         mavenCentral()
@@ -50,7 +50,7 @@ subprojects {
 
     dependencies {
         // monglife-core
-        api 'com.github.monglife:monglife-core:2.0.10'
+        implementation 'com.github.monglife:monglife-core:2.0.10'
         // lombok
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
