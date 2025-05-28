@@ -28,7 +28,10 @@ public class TransactionEventDeserializer<T> implements Deserializer<Transaction
                 throw new RuntimeException("kafka transactionEvent deserialization failed. not contain dataClassName.");
             }
 
-            return objectMapper.readValue(data, objectMapper.getTypeFactory().constructParametricType(TransactionEvent.class, Class.forName(dataClassName)));
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            Class<?> clazz = classLoader.loadClass(dataClassName);
+
+            return objectMapper.readValue(data, objectMapper.getTypeFactory().constructParametricType(TransactionEvent.class, clazz));
 
         } catch (Exception e) {
             throw new RuntimeException("kafka transactionEvent deserialization failed. json parse failed.");
