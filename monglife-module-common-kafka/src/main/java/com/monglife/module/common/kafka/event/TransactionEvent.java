@@ -25,8 +25,8 @@ public class TransactionEvent<T> {
     private String dataClassName;
 
     @Builder
-    public TransactionEvent(String topic, T data) {
-        this.transactionId = CommonUtil.randomId();
+    public TransactionEvent(String transactionId, String topic, T data) {
+        this.transactionId = transactionId;
         this.createdAt = LocalDateTime.now();
         this.topic = topic;
         this.data = data;

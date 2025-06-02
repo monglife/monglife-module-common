@@ -1,6 +1,7 @@
 package com.monglife.module.common.logging.aspect;
 
 import com.monglife.core.exception.ErrorException;
+import com.monglife.core.utils.CommonUtil;
 import com.monglife.module.common.logging.annotation.DisableLogging;
 import com.monglife.module.common.logging.utils.ArgsUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.lang.reflect.Method;
 import java.util.Queue;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 @Slf4j
@@ -66,20 +66,24 @@ public class LoggingAspect {
     @Around("endPointPointcut()")
     public Object aroundEndPoint(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        String tracieId = UUID.randomUUID().toString();
-        MDC.put("traceId", tracieId);
+        String traceId = MDC.get("traceId");
+
+        if (traceId == null || traceId.isBlank()) {
+            MDC.put("traceId", CommonUtil.randomId());
+            traceId = MDC.get("traceId");
+        }
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
 
         if (method.isAnnotationPresent(DisableLogging.class)) {
-            DISABLE_LOGGING_TRAICE_ID_QUEUE.offer(tracieId);
+            DISABLE_LOGGING_TRAICE_ID_QUEUE.offer(traceId);
         }
 
         try {
             return joinPoint.proceed();
         } finally {
-            DISABLE_LOGGING_TRAICE_ID_QUEUE.remove(tracieId);
+            DISABLE_LOGGING_TRAICE_ID_QUEUE.remove(traceId);
             MDC.clear();
         }
     }

@@ -1,7 +1,9 @@
 package com.monglife.module.common.kafka.service;
 
+import com.monglife.core.utils.CommonUtil;
 import com.monglife.module.common.kafka.event.TransactionEvent;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -21,7 +23,16 @@ public class KafkaService {
      * @param data 이벤트 본문
      */
     public <T> void generateEvent(String topic, T data) {
+
+        String traceId = MDC.get("traceId");
+
+        if (traceId == null || traceId.isBlank()) {
+            MDC.put("traceId", CommonUtil.randomId());
+            traceId = MDC.get("traceId");
+        }
+
         kafkaTemplate.send(topic, TransactionEvent.builder()
+                .transactionId(traceId)
                 .topic(topic)
                 .data(data)
                 .build());
@@ -36,7 +47,15 @@ public class KafkaService {
 
         String topicWithProfile = (profile != null && !profile.isBlank() ? profile + "." : "unknown.") + topic;
 
+        String traceId = MDC.get("traceId");
+
+        if (traceId == null || traceId.isBlank()) {
+            MDC.put("traceId", CommonUtil.randomId());
+            traceId = MDC.get("traceId");
+        }
+
         kafkaTemplate.send(topicWithProfile, TransactionEvent.builder()
+                .transactionId(traceId)
                 .topic(topic)
                 .data(data)
                 .build());
