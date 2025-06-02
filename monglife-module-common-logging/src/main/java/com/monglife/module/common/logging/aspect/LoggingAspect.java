@@ -15,6 +15,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -22,6 +23,7 @@ import java.lang.reflect.Method;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+@Order(Integer.MAX_VALUE)
 @Slf4j
 @Aspect
 @Component

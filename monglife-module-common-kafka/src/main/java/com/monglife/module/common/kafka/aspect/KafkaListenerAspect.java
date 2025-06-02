@@ -10,12 +10,12 @@ import org.springframework.core.annotation.Order;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+@Order(Integer.MAX_VALUE - 1)
 @Aspect
 @Component
 @Profile("!test")
 public class KafkaListenerAspect {
 
-    @Order(Integer.MIN_VALUE)
     @Around("@annotation(kafkaListener)")
     public Object around(ProceedingJoinPoint joinPoint, KafkaListener kafkaListener) throws Throwable {
 
