@@ -1,8 +1,14 @@
 package com.monglife.module.common.logging.aspect;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.monglife.core.exception.ErrorException;
 import com.monglife.core.utils.CommonUtil;
 import com.monglife.module.common.logging.annotation.DisableLogging;
+import com.monglife.module.common.logging.dto.ExceptionLogDto;
+import com.monglife.module.common.logging.dto.LogDto;
+import com.monglife.module.common.logging.dto.NotTransactionLogDto;
+import com.monglife.module.common.logging.dto.TransactionLogDto;
 import com.monglife.module.common.logging.utils.ArgsUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -20,8 +26,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.lang.reflect.Method;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.Map;
+import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Order(Integer.MAX_VALUE)
 @Slf4j
@@ -63,7 +70,14 @@ public class LoggingAspect {
     @Pointcut("consumerPointcut() || controllerPointcut() || listenerPointcut() || workerPointcut() || useCasePointcut() || servicePointcut() || portPointcut() || repositoryPointcut()")
     private void targetPointcut() {}
 
-    private static final Queue<String> DISABLE_LOGGING_TRAICE_ID_QUEUE = new ConcurrentLinkedDeque<>();
+    private static final Map<String, Stack<LogDto>> LOG_QUEUE_MAP = new ConcurrentHashMap<>();
+
+    private final ObjectMapper objectMapper;
+
+    public LoggingAspect(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
 
     @Around("endPointPointcut()")
     public Object aroundEndPoint(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -78,14 +92,34 @@ public class LoggingAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
 
-        if (method.isAnnotationPresent(DisableLogging.class)) {
-            DISABLE_LOGGING_TRAICE_ID_QUEUE.offer(traceId);
+        // DisableLogging 어노테이션이 없는 경우 맵에 삽입
+        if (!method.isAnnotationPresent(DisableLogging.class)) {
+            LOG_QUEUE_MAP.put(traceId, new Stack<>());
         }
 
         try {
             return joinPoint.proceed();
         } finally {
-            DISABLE_LOGGING_TRAICE_ID_QUEUE.remove(traceId);
+            Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
+
+            if (logStack != null) {
+                while (!logStack.isEmpty()) {
+                    LogDto logDto = logStack.pop();
+                    if (logDto instanceof ExceptionLogDto exceptionLogDto) {
+                        log.error(objectMapper.writeValueAsString(exceptionLogDto));
+                    } else {
+                        String logDtoJson = objectMapper.writeValueAsString(logDto);
+
+                        if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
+                            log.info(logDtoJson);
+                        } else {
+                            log.debug(logDtoJson);
+                        }
+                    }
+                }
+            }
+
+            LOG_QUEUE_MAP.remove(traceId);
             MDC.clear();
         }
     }
@@ -95,7 +129,8 @@ public class LoggingAspect {
 
         String traceId = MDC.get("traceId");
 
-        if (!DISABLE_LOGGING_TRAICE_ID_QUEUE.contains(traceId)) {
+        // 로그 수집이 필요한 경우
+        if (LOG_QUEUE_MAP.containsKey(traceId)) {
             MethodSignature signature = (MethodSignature) joinPoint.getSignature();
             Method method = signature.getMethod();
 
@@ -108,13 +143,16 @@ public class LoggingAspect {
                 message = errorException.getErrorCode() == null ? "" : errorException.getErrorCode().getMessage();
             }
 
-            String error = "\n" +
-                    String.format("%-15s : %s\n", "TRACE ID", traceId) +
-                    String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName) +
-                    String.format("%-15s : %s\n", "MESSAGE", message) +
-                    String.format("%-15s : %s", "STACK TRACE", ArgsUtil.generateExceptionTrace(exception));
+            Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
 
-            log.error(error);
+            if (logStack != null) {
+                logStack.add(ExceptionLogDto.builder()
+                        .traceId(traceId)
+                        .method(String.format("%s#%s", clazzName, methodName))
+                        .message(message)
+                        .stackTrace(ArgsUtil.generateExceptionTrace(exception))
+                        .build());
+            }
         }
 
         throw exception;
@@ -135,36 +173,24 @@ public class LoggingAspect {
         String clazzName = method.getDeclaringClass().getName();
         String methodName = method.getName();
 
-        if (!DISABLE_LOGGING_TRAICE_ID_QUEUE.contains(traceId)) {
-            StringBuilder before = new StringBuilder();
-            before.append("\n")
-                    .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
-                    .append(String.format("%-15s : %s\n", "TRANSACTION", "X"))
-                    .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
-                    .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateArgs(method, joinPoint.getArgs())));
-
-            if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
-                log.info(before.toString());
-            } else {
-                log.debug(before.toString());
-            }
-        }
+        // 매개 변수 체크
+        Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
 
         Object returnValue = joinPoint.proceed();
 
-        if (!DISABLE_LOGGING_TRAICE_ID_QUEUE.contains(traceId)) {
-            StringBuilder after = new StringBuilder();
-            after.append("\n")
-                    .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
-                    .append(String.format("%-15s : %s\n", "TRANSACTION", "X"))
-                    .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
-                    .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateReturnObject(returnValue)));
+        // 로그 수집이 필요한 경우
+        if (LOG_QUEUE_MAP.containsKey(traceId)) {
+            NotTransactionLogDto notTransactionLogDto = NotTransactionLogDto.builder()
+                    .traceId(traceId)
+                    .method(String.format("%s#%s", clazzName, methodName))
+                    .args(args)
+                    .returnValue(returnValue)
+                    .build();
 
+            Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
 
-            if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
-                log.info(after.toString());
-            } else {
-                log.debug(after.toString());
+            if (logStack != null) {
+                logStack.add(notTransactionLogDto);
             }
         }
 
@@ -186,36 +212,24 @@ public class LoggingAspect {
         String clazzName = method.getDeclaringClass().getName();
         String methodName = method.getName();
 
-        if (!DISABLE_LOGGING_TRAICE_ID_QUEUE.contains(traceId)) {
-            StringBuilder before = new StringBuilder();
-            before.append("\n")
-                    .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
-                    .append(String.format("%-15s : %s\n", "TRANSACTION", TransactionSynchronizationManager.getCurrentTransactionName()))
-                    .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
-                    .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateArgs(method, joinPoint.getArgs())));
-
-            if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
-                log.info(before.toString());
-            } else {
-                log.debug(before.toString());
-            }
-        }
+        // 매개 변수 체크
+        Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
 
         Object returnValue = joinPoint.proceed();
 
-        if (!DISABLE_LOGGING_TRAICE_ID_QUEUE.contains(traceId)) {
-            StringBuilder after = new StringBuilder();
-            after.append("\n")
-                    .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
-                    .append(String.format("%-15s : %s\n", "TRANSACTION", TransactionSynchronizationManager.getCurrentTransactionName()))
-                    .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
-                    .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateReturnObject(returnValue)));
+        if (LOG_QUEUE_MAP.containsKey(traceId)) {
+            TransactionLogDto transactionLogDto = TransactionLogDto.builder()
+                    .traceId(traceId)
+                    .method(String.format("%s#%s", clazzName, methodName))
+                    .args(args)
+                    .returnValue(returnValue)
+                    .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
+                    .build();
 
+            Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
 
-            if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
-                log.info(after.toString());
-            } else {
-                log.debug(after.toString());
+            if (logStack != null) {
+                logStack.add(transactionLogDto);
             }
         }
 
