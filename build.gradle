@@ -1,8 +1,24 @@
+buildscript {
+    ext {
+        springBootVersion                 = "3.1.1"
+        springDependencyManagementVersion = "1.1.4"
+        acuatorVersion                    = "3.2.1"
+        lombokVersion                     = "1.18.30"
+        monglifeCoreVersion               = "2.0.10"
+        monglifeModuleCommonVersion       = "1.0.13"
+        monglifeModuleMqttVersion         = "1.0.1"
+        jupiterVersion                    = "5.9.3"
+        mockitoVersion                    = "4.8.1"
+        assertjVersion                    = "3.24.2"
+        awaitilityVersion                 = "4.2.0"
+    }
+}
+
 plugins {
-    id 'java-library'
-    id 'org.springframework.boot' version '3.1.1'
-    id 'io.spring.dependency-management' version '1.1.4'
-    id 'maven-publish'
+    id "java-library"
+    id "org.springframework.boot"        version "${springBootVersion}"
+    id "io.spring.dependency-management" version "${springDependencyManagementVersion}"
+    id "maven-publish"
 }
 
 jar {
@@ -13,9 +29,14 @@ bootJar {
     enabled(false)
 }
 
-allprojects {
-    group = 'com.monglife.module.common'
-    version = '1.0.12'
+subprojects {
+    apply plugin: "java-library"
+    apply plugin: "org.springframework.boot"
+    apply plugin: "io.spring.dependency-management"
+    apply plugin: "maven-publish"
+
+    group = "com.monglife.module.common"
+    version = "${monglifeModuleCommonVersion}"
 
     repositories {
         mavenCentral()
@@ -25,13 +46,6 @@ allprojects {
     java {
         sourceCompatibility = JavaVersion.VERSION_17
     }
-}
-
-subprojects {
-    apply plugin: 'java-library'
-    apply plugin: 'org.springframework.boot'
-    apply plugin: 'io.spring.dependency-management'
-    apply plugin: 'maven-publish'
 
     bootJar {
         enabled(false)
@@ -50,21 +64,23 @@ subprojects {
 
     dependencies {
         // monglife-core
-        implementation 'com.github.monglife:monglife-core:2.0.10'
+        implementation "com.github.monglife:monglife-core:${monglifeCoreVersion}"
         // lombok
-        compileOnly 'org.projectlombok:lombok'
-        annotationProcessor 'org.projectlombok:lombok'
+        compileOnly "org.projectlombok:lombok:${lombokVersion}"
+        annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
         // JUnit 5
-        testImplementation 'org.junit.jupiter:junit-jupiter-api'
-        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+        testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterVersion}"
+        testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
         // mock
-        testImplementation 'org.mockito:mockito-core'
-        testImplementation 'org.mockito:mockito-junit-jupiter'
+        testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+        testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
         // AssertJ
-        testImplementation 'org.assertj:assertj-core'
+        testImplementation "org.assertj:assertj-core:${assertjVersion}"
+        // awaitility
+        testImplementation "org.awaitility:awaitility:${awaitilityVersion}"
     }
 
-    tasks.named('test') {
+    tasks.named("test") {
         useJUnitPlatform()
     }
 

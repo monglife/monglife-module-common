@@ -13,8 +13,8 @@ import java.util.Map;
 @AllArgsConstructor
 public enum SecurityResponse implements Response {
 
-    SECURITY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED.value(), "SECURITY-100", "인증에 실패했습니다."),
-    SECURITY_FORBIDDEN(HttpStatus.FORBIDDEN.value(), "SECURITY-101", "권한이 없습니다.");
+    SECURITY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED.value(), "000-000-100", "인증에 실패했습니다."),
+    SECURITY_FORBIDDEN(HttpStatus.FORBIDDEN.value(), "000-000-101", "권한이 없습니다.");
 
     private final Integer httpStatus;
     private final String code;
