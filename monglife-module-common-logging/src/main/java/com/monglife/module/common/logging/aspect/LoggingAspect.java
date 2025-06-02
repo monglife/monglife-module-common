@@ -1,6 +1,7 @@
 package com.monglife.module.common.logging.aspect;
 
 import com.monglife.core.exception.ErrorException;
+import com.monglife.module.common.logging.annotation.DisableLogging;
 import com.monglife.module.common.logging.utils.ArgsUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -17,7 +18,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.lang.reflect.Method;
+import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 @Slf4j
 @Aspect
@@ -58,16 +61,25 @@ public class LoggingAspect {
     @Pointcut("consumerPointcut() || controllerPointcut() || listenerPointcut() || workerPointcut() || useCasePointcut() || servicePointcut() || portPointcut() || repositoryPointcut()")
     private void targetPointcut() {}
 
+    private static final Queue<String> DISABLE_LOGGING_TRAICE_ID_QUEUE = new ConcurrentLinkedDeque<>();
+
     @Around("endPointPointcut()")
     public Object aroundEndPoint(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        if (MDC.get("traceId") == null || MDC.get("traceId").isBlank()) {
-            MDC.put("traceId", UUID.randomUUID().toString());
+        String tracieId = UUID.randomUUID().toString();
+        MDC.put("traceId", tracieId);
+
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+
+        if (method.isAnnotationPresent(DisableLogging.class)) {
+            DISABLE_LOGGING_TRAICE_ID_QUEUE.offer(tracieId);
         }
 
         try {
             return joinPoint.proceed();
         } finally {
+            DISABLE_LOGGING_TRAICE_ID_QUEUE.remove(tracieId);
             MDC.clear();
         }
     }
@@ -77,25 +89,27 @@ public class LoggingAspect {
 
         String traceId = MDC.get("traceId");
 
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Method method = signature.getMethod();
+        if (!DISABLE_LOGGING_TRAICE_ID_QUEUE.contains(traceId)) {
+            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+            Method method = signature.getMethod();
 
-        String clazzName = method.getDeclaringClass().getName();
-        String methodName = method.getName();
+            String clazzName = method.getDeclaringClass().getName();
+            String methodName = method.getName();
 
-        String message = exception.getMessage();
+            String message = exception.getMessage();
 
-        if (exception instanceof ErrorException errorException) {
-            message = errorException.getErrorCode() == null ? "" : errorException.getErrorCode().getMessage();
+            if (exception instanceof ErrorException errorException) {
+                message = errorException.getErrorCode() == null ? "" : errorException.getErrorCode().getMessage();
+            }
+
+            String error = "\n" +
+                    String.format("%-15s : %s\n", "TRACE ID", traceId) +
+                    String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName) +
+                    String.format("%-15s : %s\n", "MESSAGE", message) +
+                    String.format("%-15s : %s", "STACK TRACE", ArgsUtil.generateExceptionTrace(exception));
+
+            log.error(error);
         }
-
-        String error = "\n" +
-                String.format("%-15s : %s\n", "TRACE ID", traceId) +
-                String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName) +
-                String.format("%-15s : %s\n", "MESSAGE", message) +
-                String.format("%-15s : %s", "STACK TRACE", ArgsUtil.generateExceptionTrace(exception));
-
-        log.error(error);
 
         throw exception;
     }
@@ -115,33 +129,37 @@ public class LoggingAspect {
         String clazzName = method.getDeclaringClass().getName();
         String methodName = method.getName();
 
-        StringBuilder before = new StringBuilder();
-        before.append("\n")
-                .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
-                .append(String.format("%-15s : %s\n", "TRANSACTION", "X"))
-                .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
-                .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateArgs(method, joinPoint.getArgs())));
+        if (!DISABLE_LOGGING_TRAICE_ID_QUEUE.contains(traceId)) {
+            StringBuilder before = new StringBuilder();
+            before.append("\n")
+                    .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
+                    .append(String.format("%-15s : %s\n", "TRANSACTION", "X"))
+                    .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
+                    .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateArgs(method, joinPoint.getArgs())));
 
-        if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
-            log.info(before.toString());
-        } else {
-            log.debug(before.toString());
+            if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
+                log.info(before.toString());
+            } else {
+                log.debug(before.toString());
+            }
         }
 
         Object returnValue = joinPoint.proceed();
 
-        StringBuilder after = new StringBuilder();
-        after.append("\n")
-                .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
-                .append(String.format("%-15s : %s\n", "TRANSACTION", "X"))
-                .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
-                .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateReturnObject(returnValue)));
+        if (!DISABLE_LOGGING_TRAICE_ID_QUEUE.contains(traceId)) {
+            StringBuilder after = new StringBuilder();
+            after.append("\n")
+                    .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
+                    .append(String.format("%-15s : %s\n", "TRANSACTION", "X"))
+                    .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
+                    .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateReturnObject(returnValue)));
 
 
-        if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
-            log.info(after.toString());
-        } else {
-            log.debug(after.toString());
+            if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
+                log.info(after.toString());
+            } else {
+                log.debug(after.toString());
+            }
         }
 
         return returnValue;
@@ -162,33 +180,37 @@ public class LoggingAspect {
         String clazzName = method.getDeclaringClass().getName();
         String methodName = method.getName();
 
-        StringBuilder before = new StringBuilder();
-        before.append("\n")
-                .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
-                .append(String.format("%-15s : %s\n", "TRANSACTION", TransactionSynchronizationManager.getCurrentTransactionName()))
-                .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
-                .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateArgs(method, joinPoint.getArgs())));
+        if (!DISABLE_LOGGING_TRAICE_ID_QUEUE.contains(traceId)) {
+            StringBuilder before = new StringBuilder();
+            before.append("\n")
+                    .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
+                    .append(String.format("%-15s : %s\n", "TRANSACTION", TransactionSynchronizationManager.getCurrentTransactionName()))
+                    .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
+                    .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateArgs(method, joinPoint.getArgs())));
 
-        if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
-            log.info(before.toString());
-        } else {
-            log.debug(before.toString());
+            if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
+                log.info(before.toString());
+            } else {
+                log.debug(before.toString());
+            }
         }
 
         Object returnValue = joinPoint.proceed();
 
-        StringBuilder after = new StringBuilder();
-        after.append("\n")
-                .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
-                .append(String.format("%-15s : %s\n", "TRANSACTION", TransactionSynchronizationManager.getCurrentTransactionName()))
-                .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
-                .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateReturnObject(returnValue)));
+        if (!DISABLE_LOGGING_TRAICE_ID_QUEUE.contains(traceId)) {
+            StringBuilder after = new StringBuilder();
+            after.append("\n")
+                    .append(String.format("%-15s : %s\n", "TRACE ID", traceId))
+                    .append(String.format("%-15s : %s\n", "TRANSACTION", TransactionSynchronizationManager.getCurrentTransactionName()))
+                    .append(String.format("%-15s : %s#%s\n", "METHOD", clazzName, methodName))
+                    .append(String.format("%-15s : %s", "ARGS", ArgsUtil.generateReturnObject(returnValue)));
 
 
-        if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
-            log.info(after.toString());
-        } else {
-            log.debug(after.toString());
+            if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
+                log.info(after.toString());
+            } else {
+                log.debug(after.toString());
+            }
         }
 
         return returnValue;
