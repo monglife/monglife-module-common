@@ -54,7 +54,7 @@ public class LoggingAspect {
     @Pointcut("consumerPointcut() || controllerPointcut() || listenerPointcut() || workerPointcut() || useCasePointcut() || servicePointcut() || portPointcut() || repositoryPointcut()")
     private void targetPointcut() {}
 
-    @Around("endPointPointcut() || !@annotation(com.monglife.module.common.logging.annotation.DisableLogging)")
+    @Around("endPointPointcut() && !@annotation(com.monglife.module.common.logging.annotation.DisableLogging)")
     public Object aroundEndPoint(ProceedingJoinPoint joinPoint) throws Throwable {
 
         if (MDC.get("traceId") == null || MDC.get("traceId").isBlank()) {

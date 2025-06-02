@@ -2,11 +2,9 @@ buildscript {
     ext {
         springBootVersion                 = "3.1.1"
         springDependencyManagementVersion = "1.1.4"
-        acuatorVersion                    = "3.2.1"
         lombokVersion                     = "1.18.30"
         monglifeCoreVersion               = "2.0.10"
-        monglifeModuleCommonVersion       = "1.0.14"
-        monglifeModuleMqttVersion         = "1.0.1"
+        monglifeModuleCommonVersion       = "1.0.15"
         jupiterVersion                    = "5.9.3"
         mockitoVersion                    = "4.8.1"
         assertjVersion                    = "3.24.2"
@@ -19,10 +17,6 @@ plugins {
     id "org.springframework.boot"        version "${springBootVersion}"
     id "io.spring.dependency-management" version "${springDependencyManagementVersion}"
     id "maven-publish"
-}
-
-jar {
-    enabled(false)
 }
 
 bootJar {
