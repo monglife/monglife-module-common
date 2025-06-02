@@ -31,7 +31,7 @@ public class ArgsUtil {
                 argsBuilder.append("null");
             } else if (args[index].getClass().isPrimitive()) {
                 argsBuilder
-                        .append("\n")
+                        .append("\n\t")
                         .append(" - ")
                         .append("[")
                         .append(index)
@@ -45,7 +45,7 @@ public class ArgsUtil {
                 try {
                     String argJson = objectMapper.writeValueAsString(args[index]);
                     argsBuilder
-                            .append("\n")
+                            .append("\n\t")
                             .append(" - ")
                             .append("[")
                             .append(index)
@@ -57,7 +57,7 @@ public class ArgsUtil {
                             .append(argJson);
                 } catch (JsonProcessingException ignored) {
                     argsBuilder
-                            .append("\n")
+                            .append("\n\t")
                             .append(" - ")
                             .append("[")
                             .append(index)
@@ -74,5 +74,71 @@ public class ArgsUtil {
         }
 
         return argsBuilder.toString();
+    }
+
+    public static String generateReturnObject(Object returnValue) {
+
+        StringBuilder returnValueBuilder = new StringBuilder();
+        if (returnValue == null) {
+            returnValueBuilder.append("null");
+        } else if (returnValue.getClass().isPrimitive()) {
+            returnValueBuilder
+                    .append("\n\t")
+                    .append(" - ")
+                    .append("<")
+                    .append(returnValue.getClass().getTypeName())
+                    .append("> : ")
+                    .append(returnValue);
+        } else {
+            try {
+                String argJson = objectMapper.writeValueAsString(returnValue);
+                returnValueBuilder
+                        .append("\n\t")
+                        .append(" - ")
+                        .append("<")
+                        .append(returnValue.getClass().getTypeName())
+                        .append("> : ")
+                        .append(argJson);
+            } catch (JsonProcessingException ignored) {
+                returnValueBuilder
+                        .append("\n\t")
+                        .append(" - ")
+                        .append("<")
+                        .append(returnValue.getClass().getTypeName())
+                        .append("> : ")
+                        .append(returnValue);
+            }
+        }
+
+        return returnValueBuilder.toString();
+    }
+
+    public static String generateExceptionTrace(Throwable throwable) {
+
+        StringBuilder exceptionTraceBuilder = new StringBuilder();
+        exceptionTraceBuilder.append(throwable.toString());
+
+        for (StackTraceElement stackTraceElement : throwable.getStackTrace()) {
+            exceptionTraceBuilder
+                    .append("\tat ")
+                    .append(stackTraceElement);
+        }
+
+        Throwable cause = throwable.getCause();
+        while(cause != null) {
+            exceptionTraceBuilder
+                    .append("Caused by: ")
+                    .append(cause.toString());
+
+            for (StackTraceElement stackTraceElement : cause.getStackTrace()) {
+                exceptionTraceBuilder
+                        .append("\tat ")
+                        .append(stackTraceElement);
+            }
+
+            cause = cause.getCause();
+        }
+
+        return exceptionTraceBuilder.toString();
     }
 }
