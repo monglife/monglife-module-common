@@ -19,7 +19,7 @@ public class ArgsUtil {
             String parameterName = parameters[index].getName();
             Object arg = args[index];
 
-            if (arg == null) {
+            if (arg == null || isMonglifePackageObject(arg)) {
                 argsMap.put(parameterName, "");
             } else {
                 argsMap.put(parameterName, arg);
@@ -41,10 +41,11 @@ public class ArgsUtil {
         }
 
         Throwable cause = throwable.getCause();
+
         while(cause != null) {
             exceptionTraceBuilder
                     .append("Caused by: ")
-                    .append(cause.toString());
+                    .append(cause);
 
             for (StackTraceElement stackTraceElement : cause.getStackTrace()) {
                 exceptionTraceBuilder
@@ -56,5 +57,12 @@ public class ArgsUtil {
         }
 
         return exceptionTraceBuilder.toString();
+    }
+
+    private static boolean isMonglifePackageObject(Object arg) {
+        return arg != null
+                && arg.getClass().getPackage() != null
+                && arg.getClass().getPackage().getName().startsWith("com.monglife")
+                && !arg.getClass().getPackage().getName().contains("org.springframework.data.redis");
     }
 }

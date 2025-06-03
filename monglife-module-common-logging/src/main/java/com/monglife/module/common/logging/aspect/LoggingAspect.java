@@ -85,6 +85,8 @@ public class LoggingAspect {
         this.objectMapper.registerModule(javaTimeModule);
         this.objectMapper.registerModule(hibernate6Module);
         this.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        this.objectMapper.configure(SerializationFeature.FAIL_ON_SELF_REFERENCES, false);
+        this.objectMapper.configure(SerializationFeature.FAIL_ON_UNWRAPPED_TYPE_IDENTIFIERS, false);
     }
 
     @Around("endPointPointcut()")
