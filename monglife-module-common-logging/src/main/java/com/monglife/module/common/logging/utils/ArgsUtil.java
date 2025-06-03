@@ -12,7 +12,7 @@ public class ArgsUtil {
     /**
      * 로깅을 위한 메서드 파라미터 맵 생성
      */
-    public static Map<String, Object> generateArgs(Method method, Object[] args) throws JsonProcessingException {
+    public static Map<String, Object> generateArgs(Method method, Object[] args) {
 
         Map<String, Object> argsMap = new HashMap<>();
         Parameter[] parameters = method.getParameters();

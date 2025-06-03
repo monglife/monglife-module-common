@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Order(Integer.MAX_VALUE)
+@Order(Integer.MIN_VALUE + 1)
 @Slf4j
 @Aspect
 @Component
