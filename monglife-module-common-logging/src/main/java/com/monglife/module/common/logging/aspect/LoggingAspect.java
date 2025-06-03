@@ -1,6 +1,7 @@
 package com.monglife.module.common.logging.aspect;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.monglife.core.exception.ErrorException;
 import com.monglife.core.utils.CommonUtil;
@@ -30,7 +31,7 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Order(Integer.MIN_VALUE + 1)
+@Order(Integer.MAX_VALUE)
 @Slf4j
 @Aspect
 @Component
@@ -75,8 +76,13 @@ public class LoggingAspect {
     private final ObjectMapper objectMapper;
 
     public LoggingAspect() {
+        JavaTimeModule javaTimeModule = new JavaTimeModule();
+        Hibernate6Module hibernate6Module = new Hibernate6Module();
+        hibernate6Module.disable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
+
         this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
+        this.objectMapper.registerModule(javaTimeModule);
+        this.objectMapper.registerModule(hibernate6Module);
     }
 
     @Around("endPointPointcut()")
@@ -173,6 +179,8 @@ public class LoggingAspect {
         String clazzName = method.getDeclaringClass().getName();
         String methodName = method.getName();
 
+        Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
+
         Object returnValue = joinPoint.proceed();
 
         // 로그 수집이 필요한 경우
@@ -180,7 +188,7 @@ public class LoggingAspect {
             NotTransactionLogDto notTransactionLogDto = NotTransactionLogDto.builder()
                     .traceId(traceId)
                     .method(String.format("%s#%s", clazzName, methodName))
-                    .args(ArgsUtil.generateArgs(method, joinPoint.getArgs()))
+                    .args(args)
                     .returnValue(returnValue)
                     .build();
 
@@ -209,13 +217,15 @@ public class LoggingAspect {
         String clazzName = method.getDeclaringClass().getName();
         String methodName = method.getName();
 
+        Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
+
         Object returnValue = joinPoint.proceed();
 
         if (LOG_QUEUE_MAP.containsKey(traceId)) {
             TransactionLogDto transactionLogDto = TransactionLogDto.builder()
                     .traceId(traceId)
                     .method(String.format("%s#%s", clazzName, methodName))
-                    .args(ArgsUtil.generateArgs(method, joinPoint.getArgs()))
+                    .args(args)
                     .returnValue(returnValue)
                     .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
                     .build();

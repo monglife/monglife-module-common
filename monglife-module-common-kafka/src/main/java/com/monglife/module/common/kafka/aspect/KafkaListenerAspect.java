@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-@Order(Integer.MIN_VALUE)
+@Order(Integer.MAX_VALUE - 1)
 @Aspect
 @Component
 @Profile("!test")

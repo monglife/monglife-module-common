@@ -1,7 +1,5 @@
 package com.monglife.module.common.logging.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.HashMap;
