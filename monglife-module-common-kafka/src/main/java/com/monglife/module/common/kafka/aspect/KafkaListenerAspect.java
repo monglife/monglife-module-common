@@ -7,7 +7,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Order(Integer.MAX_VALUE - 1)
@@ -16,8 +15,8 @@ import org.springframework.stereotype.Component;
 @Profile("!test")
 public class KafkaListenerAspect {
 
-    @Around("@annotation(kafkaListener)")
-    public Object around(ProceedingJoinPoint joinPoint, KafkaListener kafkaListener) throws Throwable {
+    @Around("@annotation(org.springframework.kafka.annotation.KafkaListener)")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 
         Object[] args = joinPoint.getArgs();
 

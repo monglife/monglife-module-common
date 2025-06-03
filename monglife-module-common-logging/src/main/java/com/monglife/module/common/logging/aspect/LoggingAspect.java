@@ -37,9 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Profile("!test")
 public class LoggingAspect {
 
-    @Value("${spring.config.activate.on-profile}")
-    private String profile;
-
     @Pointcut("execution(* com.monglife..*Consumer.*(..))")
     private void consumerPointcut() {}
 
@@ -70,14 +67,17 @@ public class LoggingAspect {
     @Pointcut("consumerPointcut() || controllerPointcut() || listenerPointcut() || workerPointcut() || useCasePointcut() || servicePointcut() || portPointcut() || repositoryPointcut()")
     private void targetPointcut() {}
 
+    @Value("${spring.config.activate.on-profile}")
+    private String profile;
+
     private static final Map<String, Stack<LogDto>> LOG_QUEUE_MAP = new ConcurrentHashMap<>();
 
-    private final ObjectMapper objectMapper;
+//    private final ObjectMapper objectMapper;
 
-    public LoggingAspect(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-        this.objectMapper.registerModule(new JavaTimeModule());
-    }
+//    public LoggingAspect(ObjectMapper objectMapper) {
+//        this.objectMapper = objectMapper;
+//        this.objectMapper.registerModule(new JavaTimeModule());
+//    }
 
     @Around("endPointPointcut()")
     public Object aroundEndPoint(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -106,14 +106,17 @@ public class LoggingAspect {
                 while (!logStack.isEmpty()) {
                     LogDto logDto = logStack.pop();
                     if (logDto instanceof ExceptionLogDto exceptionLogDto) {
-                        log.error(objectMapper.writeValueAsString(exceptionLogDto));
+//                        log.error(objectMapper.writeValueAsString(exceptionLogDto));
+                        log.error(exceptionLogDto.toString());
                     } else {
-                        String logDtoJson = objectMapper.writeValueAsString(logDto);
+//                        String logDtoJson = objectMapper.writeValueAsString(logDto);
 
-                        if (profile != null && !profile.isBlank() && ("dev".equals(profile) || "stg".equals(profile))) {
-                            log.info(logDtoJson);
+                        if (profile != null && !profile.isBlank() && "prd".equals(profile)) {
+//                            log.debug(logDtoJson);
+                            log.debug(logDto.toString());
                         } else {
-                            log.debug(logDtoJson);
+//                            log.info(logDtoJson);
+                            log.info(logDto.toString());
                         }
                     }
                 }
