@@ -72,12 +72,12 @@ public class LoggingAspect {
 
     private static final Map<String, Stack<LogDto>> LOG_QUEUE_MAP = new ConcurrentHashMap<>();
 
-//    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-//    public LoggingAspect(ObjectMapper objectMapper) {
-//        this.objectMapper = objectMapper;
-//        this.objectMapper.registerModule(new JavaTimeModule());
-//    }
+    public LoggingAspect(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
 
     @Around("endPointPointcut()")
     public Object aroundEndPoint(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -106,17 +106,14 @@ public class LoggingAspect {
                 while (!logStack.isEmpty()) {
                     LogDto logDto = logStack.pop();
                     if (logDto instanceof ExceptionLogDto exceptionLogDto) {
-//                        log.error(objectMapper.writeValueAsString(exceptionLogDto));
-                        log.error(exceptionLogDto.toString());
+                        log.error(objectMapper.writeValueAsString(exceptionLogDto));
                     } else {
-//                        String logDtoJson = objectMapper.writeValueAsString(logDto);
+                        String logDtoJson = objectMapper.writeValueAsString(logDto);
 
                         if (profile != null && !profile.isBlank() && "prd".equals(profile)) {
-//                            log.debug(logDtoJson);
-                            log.debug(logDto.toString());
+                            log.debug(logDtoJson);
                         } else {
-//                            log.info(logDtoJson);
-                            log.info(logDto.toString());
+                            log.info(logDtoJson);
                         }
                     }
                 }

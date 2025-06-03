@@ -1,13 +1,17 @@
 package com.monglife.module.common.logging.dto;
 
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Map;
 
-@ToString
 @Getter
 @Setter
 @NoArgsConstructor
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class TransactionLogDto extends LogDto {
 
     private Map<String, Object> args;
