@@ -1,9 +1,6 @@
 package com.monglife.module.common.logging.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -11,13 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ArgsUtil {
-
-    private static final ObjectMapper objectMapper;
-
-    static {
-        objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-    }
 
     /**
      * 로깅을 위한 메서드 파라미터 맵 생성
@@ -38,9 +28,7 @@ public class ArgsUtil {
             }
         }
 
-        String argsJson = objectMapper.writeValueAsString(argsMap);
-
-        return objectMapper.readValue(argsJson, new TypeReference<Map<String, Object>>() {});
+        return argsMap;
     }
 
     public static String generateExceptionTrace(Throwable throwable) {

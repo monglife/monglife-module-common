@@ -173,9 +173,6 @@ public class LoggingAspect {
         String clazzName = method.getDeclaringClass().getName();
         String methodName = method.getName();
 
-        // 매개 변수 체크
-        Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
-
         Object returnValue = joinPoint.proceed();
 
         // 로그 수집이 필요한 경우
@@ -183,7 +180,7 @@ public class LoggingAspect {
             NotTransactionLogDto notTransactionLogDto = NotTransactionLogDto.builder()
                     .traceId(traceId)
                     .method(String.format("%s#%s", clazzName, methodName))
-                    .args(args)
+                    .args(ArgsUtil.generateArgs(method, joinPoint.getArgs()))
                     .returnValue(returnValue)
                     .build();
 
@@ -212,16 +209,13 @@ public class LoggingAspect {
         String clazzName = method.getDeclaringClass().getName();
         String methodName = method.getName();
 
-        // 매개 변수 체크
-        Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
-
         Object returnValue = joinPoint.proceed();
 
         if (LOG_QUEUE_MAP.containsKey(traceId)) {
             TransactionLogDto transactionLogDto = TransactionLogDto.builder()
                     .traceId(traceId)
                     .method(String.format("%s#%s", clazzName, methodName))
-                    .args(args)
+                    .args(ArgsUtil.generateArgs(method, joinPoint.getArgs()))
                     .returnValue(returnValue)
                     .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
                     .build();
