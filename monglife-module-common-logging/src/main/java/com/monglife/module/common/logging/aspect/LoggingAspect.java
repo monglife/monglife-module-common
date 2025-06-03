@@ -1,6 +1,7 @@
 package com.monglife.module.common.logging.aspect;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.monglife.core.exception.ErrorException;
@@ -83,6 +84,7 @@ public class LoggingAspect {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(javaTimeModule);
         this.objectMapper.registerModule(hibernate6Module);
+        this.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
 
     @Around("endPointPointcut()")

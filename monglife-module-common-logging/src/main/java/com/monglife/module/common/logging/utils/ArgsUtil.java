@@ -20,7 +20,7 @@ public class ArgsUtil {
             Object arg = args[index];
 
             if (arg == null) {
-                argsMap.put(parameterName, "null");
+                argsMap.put(parameterName, "");
             } else {
                 argsMap.put(parameterName, arg);
             }
