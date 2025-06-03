@@ -74,8 +74,8 @@ public class LoggingAspect {
 
     private final ObjectMapper objectMapper;
 
-    public LoggingAspect(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public LoggingAspect() {
+        this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
     }
 
