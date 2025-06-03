@@ -19,7 +19,7 @@ public class ArgsUtil {
             String parameterName = parameters[index].getName();
             Object arg = args[index];
 
-            if (arg == null || isMonglifePackageObject(arg)) {
+            if (arg == null || cantObjectPackage(arg)) {
                 argsMap.put(parameterName, "");
             } else {
                 argsMap.put(parameterName, arg);
@@ -59,10 +59,9 @@ public class ArgsUtil {
         return exceptionTraceBuilder.toString();
     }
 
-    private static boolean isMonglifePackageObject(Object arg) {
+    private static boolean cantObjectPackage(Object arg) {
         return arg != null
                 && arg.getClass().getPackage() != null
-                && arg.getClass().getPackage().getName().startsWith("com.monglife")
-                && !arg.getClass().getPackage().getName().contains("org.springframework.data.redis");
+                && !arg.getClass().getPackage().getName().startsWith("com.monglife");
     }
 }
