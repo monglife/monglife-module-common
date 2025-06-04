@@ -81,7 +81,10 @@ public class LoggingUtil {
      * 엔터리 메서드 이름
      */
     public void setEntryMethod(Method method) {
-        MDC.put("entryMethod", method.getName());
+        String clazzName = method.getDeclaringClass().getName();
+        String methodName = method.getName();
+
+        MDC.put("entryMethod", String.format("%s#%s", clazzName, methodName));
     }
 
     public String getEntryMethod() {
