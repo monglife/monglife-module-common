@@ -109,7 +109,7 @@ public class LoggingUtil {
      * 로깅 필요 메서드 여부
      */
     public boolean isLoggingMethod(String traceId, Method method) {
-        return LOG_QUEUE_MAP.containsKey(traceId) && !method.isAnnotationPresent(DisableLoggingCascade.class) && !method.isAnnotationPresent(DisableLogging.class);
+        return traceId != null && LOG_QUEUE_MAP.containsKey(traceId) && !method.isAnnotationPresent(DisableLoggingCascade.class) && !method.isAnnotationPresent(DisableLogging.class);
     }
 
     /**

@@ -54,7 +54,7 @@ public class EntryLoggingAspect {
     /**
      * traceId 생성 및 traceOffset 설정
      */
-    @Around("@annotation(com.monglife.module.common.logging.annotation.EntryLoggingPoint)")
+    @Around("@within(com.monglife.module.common.logging.annotation.EntryLoggingPoint) || @annotation(com.monglife.module.common.logging.annotation.EntryLoggingPoint)")
     public Object aroundEntry(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = loggingUtil.getTraceIdOrReset();
