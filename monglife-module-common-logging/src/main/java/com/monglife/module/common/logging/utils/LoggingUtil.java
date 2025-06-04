@@ -121,7 +121,7 @@ public class LoggingUtil {
      * traceOffset 정수 변환
      */
     private int convertTraceOffset(String traceOffset) {
-        if (traceOffset != null && !traceOffset.isBlank() && traceOffset.chars().allMatch(Character::isDigit)) {
+        if (traceOffset != null && !traceOffset.isBlank() && traceOffset.matches("-?\\d+")) {
             return Integer.parseInt(traceOffset);
         }
 
