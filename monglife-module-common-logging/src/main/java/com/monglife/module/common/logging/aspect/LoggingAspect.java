@@ -7,15 +7,14 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.monglife.core.exception.ErrorException;
 import com.monglife.core.utils.CommonUtil;
 import com.monglife.module.common.logging.annotation.DisableLogging;
+import com.monglife.module.common.logging.annotation.DisableLoggingCascade;
 import com.monglife.module.common.logging.dto.ExceptionLogDto;
 import com.monglife.module.common.logging.dto.LogDto;
 import com.monglife.module.common.logging.dto.NotTransactionLogDto;
 import com.monglife.module.common.logging.dto.TransactionLogDto;
 import com.monglife.module.common.logging.utils.ArgsUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
@@ -73,7 +72,7 @@ public class LoggingAspect {
     @Pointcut("useCasePointcut() || servicePointcut() || domainPointcut() || portPointcut() || repositoryPointcut()")
     private void businessPointcut() {}
 
-    @Pointcut("consumerPointcut() || controllerPointcut() || listenerPointcut() || workerPointcut() || useCasePointcut() || servicePointcut() || domainPointcut() || portPointcut() || repositoryPointcut()")
+    @Pointcut("entryPointcut() || businessPointcut()")
     private void targetPointcut() {}
 
     @Value("${spring.config.activate.on-profile}")
@@ -100,25 +99,24 @@ public class LoggingAspect {
      * traceId 생성 및 traceOffset 설정
      */
     @Around("entryPointcut()")
-    public Object aroundEndPoint(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object aroundEntry(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = MDC.get("traceId");
-        int traceOffset = convertTraceOffset(MDC.get("traceOffset"));
 
         if (traceId == null || traceId.isBlank()) {
             MDC.put("traceId", CommonUtil.randomId());
             traceId = MDC.get("traceId");
         }
 
-        if (traceOffset == Integer.MIN_VALUE) {
+        if (convertTraceOffset(MDC.get("traceOffset")) == Integer.MIN_VALUE) {
             MDC.put("traceOffset", "0");
         }
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
 
-        // DisableLogging 어노테이션이 없는 경우 맵에 삽입
-        if (!method.isAnnotationPresent(DisableLogging.class)) {
+        // 로깅 제외 Entry layer 메서드
+        if (!method.isAnnotationPresent(DisableLoggingCascade.class)) {
             LOG_QUEUE_MAP.put(traceId, new Stack<>());
         }
 
@@ -150,10 +148,10 @@ public class LoggingAspect {
     }
 
     /**
-     * None Transactional 메서드 로깅 함수
+     * 메서드 로깅 함수
      * @param joinPoint 조인 포인트
      */
-    @Around("businessPointcut() && !@annotation(com.monglife.module.common.logging.annotation.DisableLogging)")
+    @Around("targetPointcut() && !@annotation(com.monglife.module.common.logging.annotation.DisableLogging)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = MDC.get("traceId");
@@ -172,13 +170,12 @@ public class LoggingAspect {
 
         Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
 
+        LogDto logDto = null;
+
         try {
             Object returnValue = joinPoint.proceed();
 
-            // 로그 수집이 필요한 경우
-            if (LOG_QUEUE_MAP.containsKey(traceId)) {
-                LogDto logDto;
-
+            if (isLoggingMethod(traceId, method)) {
                 if (!method.isAnnotationPresent(Transactional.class)) {
                     // 논 트랜 잭션 메서드
                     logDto = NotTransactionLogDto.builder()
@@ -201,42 +198,48 @@ public class LoggingAspect {
                             .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
                             .build();
                 }
-
-                Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
-
-                if (logStack != null && logDto != null) {
-                    logStack.add(logDto);
-                }
             }
 
             return returnValue;
 
         } catch (Exception exception) {
-            // 로그 수집이 필요한 경우
-            if (LOG_QUEUE_MAP.containsKey(traceId)) {
+
+            if (isLoggingMethod(traceId, method)) {
                 String message = exception.getMessage();
 
                 if (exception instanceof ErrorException errorException) {
                     message = errorException.getErrorCode() == null ? "" : errorException.getErrorCode().getMessage();
                 }
 
-                Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
-
-                if (logStack != null) {
-                    logStack.add(ExceptionLogDto.builder()
-                            .traceId(traceId)
-                            .traceOffset(traceOffset)
-                            .className(clazzName)
-                            .method(methodName)
-                            .args(args)
-                            .message(message)
-                            .stackTrace(ArgsUtil.generateExceptionTrace(exception))
-                            .build());
-                }
+                logDto = ExceptionLogDto.builder()
+                        .traceId(traceId)
+                        .traceOffset(traceOffset)
+                        .className(clazzName)
+                        .method(methodName)
+                        .args(args)
+                        .message(message)
+                        .stackTrace(ArgsUtil.generateExceptionTrace(exception))
+                        .build();
             }
 
             throw exception;
+
+        } finally {
+            if (LOG_QUEUE_MAP.containsKey(traceId) && !method.isAnnotationPresent(DisableLogging.class)) {
+                Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
+
+                if (logStack != null && logDto != null) {
+                    logStack.add(logDto);
+                }
+            }
         }
+    }
+
+    /**
+     * 로깅 필요 메서드 여부
+     */
+    private boolean isLoggingMethod(String traceId, Method method) {
+        return LOG_QUEUE_MAP.containsKey(traceId) && !method.isAnnotationPresent(DisableLogging.class);
     }
 
     /**
