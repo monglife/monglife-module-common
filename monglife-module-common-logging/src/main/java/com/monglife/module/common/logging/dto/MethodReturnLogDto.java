@@ -1,6 +1,7 @@
 package com.monglife.module.common.logging.dto;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.monglife.module.common.logging.enums.LogType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,15 +13,15 @@ import java.util.Map;
 @Setter
 @NoArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class NormalLogDto extends LogDto {
+public class MethodReturnLogDto extends LogDto {
 
     private Object returnValue;
 
     private String transaction;
 
     @Builder
-    public NormalLogDto(String traceId, Integer traceOffset, String className, String method, Map<String, Object> args, Object returnValue, String transaction) {
-        super(traceId, traceOffset, className, method, args);
+    public MethodReturnLogDto(String traceId, Integer traceOffset, String className, String method, Map<String, Object> args, Object returnValue, String transaction) {
+        super(traceId, traceOffset, className, method, args, LogType.METHOD_RETURN);
         this.returnValue = returnValue;
         this.transaction = transaction;
     }

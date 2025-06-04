@@ -1,6 +1,7 @@
 package com.monglife.module.common.logging.dto;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.monglife.module.common.logging.enums.LogType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +21,7 @@ public class ExceptionLogDto extends LogDto {
 
     @Builder()
     public ExceptionLogDto(String traceId, Integer traceOffset, String className, String method, Map<String, Object> args, String message, String stackTrace) {
-        super(traceId, traceOffset, className, method, args);
+        super(traceId, traceOffset, className, method, args, LogType.EXCEPTION);
         this.message = message;
         this.stackTrace = stackTrace;
     }

@@ -34,14 +34,7 @@ public class LoggingPointcut {
     @Pointcut("execution(* com.monglife..*Repository.*(..))")
     private void repositoryPointcut() {}
 
-    // group point cut
-    @Pointcut("consumerPointcut() || controllerPointcut() || workerPointcut() || initializerPointcut()")
-    public void entryPointcut() {}
-
-    @Pointcut("useCasePointcut() || servicePointcut() || domainPointcut() || listenerPointcut() || portPointcut() || repositoryPointcut()")
-    public void businessPointcut() {}
-
     // union all point cut
-    @Pointcut("entryPointcut() || businessPointcut()")
+    @Pointcut("consumerPointcut() || controllerPointcut() || workerPointcut() || initializerPointcut() || useCasePointcut() || servicePointcut() || domainPointcut() || listenerPointcut() || portPointcut() || repositoryPointcut()")
     public void allPointcut() {}
 }

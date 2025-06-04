@@ -2,8 +2,8 @@ package com.monglife.module.common.logging.aspect;
 
 import com.monglife.core.exception.ErrorException;
 import com.monglife.module.common.logging.dto.ExceptionLogDto;
-import com.monglife.module.common.logging.dto.LogDto;
-import com.monglife.module.common.logging.dto.NormalLogDto;
+import com.monglife.module.common.logging.dto.MethodReturnLogDto;
+import com.monglife.module.common.logging.dto.MethodCallDto;
 import com.monglife.module.common.logging.utils.ArgsUtil;
 import com.monglife.module.common.logging.utils.LoggingUtil;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Stack;
 
 @Slf4j
 @Aspect
@@ -51,10 +50,23 @@ public class TargetLoggingAspect {
         Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
 
         try {
+            if (loggingUtil.isLoggingMethod(traceId, method)) {
+                MethodCallDto methodCallDto = MethodCallDto.builder()
+                        .traceId(traceId)
+                        .traceOffset(traceOffset)
+                        .className(clazzName)
+                        .method(methodName)
+                        .args(args)
+                        .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
+                        .build();
+
+                log.info(loggingUtil.parseJson(methodCallDto));
+            }
+
             Object returnValue = joinPoint.proceed();
 
             if (loggingUtil.isLoggingMethod(traceId, method)) {
-                NormalLogDto normalLogDto = NormalLogDto.builder()
+                MethodReturnLogDto methodReturnLogDto = MethodReturnLogDto.builder()
                         .traceId(traceId)
                         .traceOffset(traceOffset)
                         .className(clazzName)
@@ -63,11 +75,8 @@ public class TargetLoggingAspect {
                         .returnValue(returnValue)
                         .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
                         .build();
-                Stack<LogDto> logStack = loggingUtil.getLogStack(traceId);
 
-                if (logStack != null && normalLogDto != null) {
-                    logStack.add(normalLogDto);
-                }
+                log.info(loggingUtil.parseJson(methodReturnLogDto));
             }
 
             return returnValue;
@@ -91,11 +100,7 @@ public class TargetLoggingAspect {
                         .stackTrace(ArgsUtil.generateExceptionTrace(exception))
                         .build();
 
-                Stack<LogDto> logStack = loggingUtil.getLogStack(traceId);
-
-                if (logStack != null && exceptionLogDto != null) {
-                    logStack.add(exceptionLogDto);
-                }
+                log.error(loggingUtil.parseJson(exceptionLogDto));
             }
 
             throw exception;

@@ -4,23 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.monglife.module.common.logging.annotation.DisableLoggingCascade;
-import com.monglife.module.common.logging.dto.ExceptionLogDto;
-import com.monglife.module.common.logging.dto.LogDto;
 import com.monglife.module.common.logging.utils.LoggingUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-
-import java.lang.reflect.Method;
-import java.util.Stack;
 
 @Order(Integer.MIN_VALUE + 1)
 @Slf4j
@@ -57,39 +50,13 @@ public class EntryLoggingAspect {
     @Around("@within(com.monglife.module.common.logging.annotation.EntryLoggingPoint) || @annotation(com.monglife.module.common.logging.annotation.EntryLoggingPoint)")
     public Object aroundEntry(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        String traceId = loggingUtil.getTraceIdOrReset();
-        int traceOffset = loggingUtil.getTraceOffsetOrReset();
-
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Method method = signature.getMethod();
-
-        // 로깅 제외 Entry layer 메서드
-        if (!method.isAnnotationPresent(DisableLoggingCascade.class)) {
-            loggingUtil.resetLogStack(traceId);
-        }
+        loggingUtil.getTraceIdOrReset();
+        loggingUtil.getTraceOffsetOrReset();
 
         try {
             return joinPoint.proceed();
         } finally {
-            Stack<LogDto> logStack = loggingUtil.getLogStack(traceId);
-
-            while (!logStack.isEmpty()) {
-                LogDto logDto = logStack.pop();
-
-                if (logDto instanceof ExceptionLogDto exceptionLogDto) {
-                    log.error(objectMapper.writeValueAsString(exceptionLogDto));
-                } else {
-                    String logDtoJson = objectMapper.writeValueAsString(logDto);
-
-                    if (profile != null && !profile.isBlank() && "prd".equals(profile)) {
-                        log.debug(logDtoJson);
-                    } else {
-                        log.info(logDtoJson);
-                    }
-                }
-            }
-
-            loggingUtil.clear(traceId);
+            loggingUtil.clear();
         }
     }
 }

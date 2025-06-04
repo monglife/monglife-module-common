@@ -1,21 +1,34 @@
 package com.monglife.module.common.logging.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.monglife.core.utils.CommonUtil;
 import com.monglife.module.common.logging.annotation.DisableLogging;
-import com.monglife.module.common.logging.annotation.DisableLoggingCascade;
 import com.monglife.module.common.logging.dto.LogDto;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.Stack;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class LoggingUtil {
 
-    private static final Map<String, Stack<LogDto>> LOG_QUEUE_MAP = new ConcurrentHashMap<>();
+    private final ObjectMapper objectMapper;
+
+    public LoggingUtil() {
+        JavaTimeModule javaTimeModule = new JavaTimeModule();
+        Hibernate6Module hibernate6Module = new Hibernate6Module();
+        hibernate6Module.disable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
+
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(javaTimeModule);
+        this.objectMapper.registerModule(hibernate6Module);
+        this.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        this.objectMapper.configure(SerializationFeature.FAIL_ON_SELF_REFERENCES, false);
+        this.objectMapper.configure(SerializationFeature.FAIL_ON_UNWRAPPED_TYPE_IDENTIFIERS, false);
+    }
 
     /**
      * 로그 추적 ID 조회
@@ -80,36 +93,25 @@ public class LoggingUtil {
     }
 
     /**
-     * 로그 스택 초기화
-     * @param traceId 로그 추적 ID
-     */
-    public void resetLogStack(String traceId) {
-        LOG_QUEUE_MAP.put(traceId, new Stack<>());
-    }
-
-    /**
-     * 로그 스택 조회
-     * @param traceId 로그 추적 ID
-     * @return 로그 스택
-     */
-    public Stack<LogDto> getLogStack(String traceId) {
-        return LOG_QUEUE_MAP.get(traceId) == null ? new Stack<>() : LOG_QUEUE_MAP.get(traceId);
-    }
-
-    /**
      * 스레드 캐시 삭제
-     * @param traceId 로그 추적 ID
      */
-    public void clear(String traceId) {
-        LOG_QUEUE_MAP.remove(traceId);
+    public void clear() {
         MDC.clear();
+    }
+
+    public String parseJson(LogDto logDto) {
+        try {
+            return objectMapper.writeValueAsString(logDto);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     /**
      * 로깅 필요 메서드 여부
      */
     public boolean isLoggingMethod(String traceId, Method method) {
-        return traceId != null && LOG_QUEUE_MAP.containsKey(traceId) && !method.isAnnotationPresent(DisableLoggingCascade.class) && !method.isAnnotationPresent(DisableLogging.class);
+        return traceId != null && !method.isAnnotationPresent(DisableLogging.class);
     }
 
     /**
