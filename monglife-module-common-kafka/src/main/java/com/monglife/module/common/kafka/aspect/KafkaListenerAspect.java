@@ -23,6 +23,7 @@ public class KafkaListenerAspect {
         for (Object arg : args) {
             if (arg instanceof TransactionEvent<?> event) {
                 MDC.put("traceId", event.getTransactionId());
+                MDC.put("traceOffset", String.valueOf(event.getTraceOffset()));
             }
         }
 

@@ -11,10 +11,16 @@ public class LogDto {
 
     private String traceId;
 
+    private Integer traceOffset;
+
+    private String className;
+
     private String method;
 
-    public LogDto(String traceId, String method) {
+    public LogDto(String traceId, Integer traceOffset, String className, String method) {
         this.traceId = traceId;
+        this.traceOffset = traceOffset;
+        this.className = className;
         this.method = method;
     }
 }

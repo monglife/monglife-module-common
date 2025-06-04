@@ -19,8 +19,8 @@ public class NotTransactionLogDto extends LogDto {
     private Object returnValue;
 
     @Builder
-    public NotTransactionLogDto(String traceId, String method, Map<String, Object> args, Object returnValue) {
-        super(traceId, method);
+    public NotTransactionLogDto(String traceId, Integer traceOffset, String className, String method, Map<String, Object> args, Object returnValue) {
+        super(traceId, traceOffset, className, method);
         this.args = args;
         this.returnValue = returnValue;
     }

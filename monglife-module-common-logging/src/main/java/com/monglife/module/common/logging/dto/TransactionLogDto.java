@@ -21,8 +21,8 @@ public class TransactionLogDto extends LogDto {
     private String transaction;
 
     @Builder
-    public TransactionLogDto(String traceId, String method, Map<String, Object> args, Object returnValue, String transaction) {
-        super(traceId, method);
+    public TransactionLogDto(String traceId, Integer traceOffset, String className, String method, Map<String, Object> args, Object returnValue, String transaction) {
+        super(traceId, traceOffset, className, method);
         this.args = args;
         this.returnValue = returnValue;
         this.transaction = transaction;

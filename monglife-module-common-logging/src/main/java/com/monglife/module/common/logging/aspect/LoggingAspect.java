@@ -57,6 +57,9 @@ public class LoggingAspect {
     @Pointcut("execution(* com.monglife..*Service.*(..))")
     private void servicePointcut() {}
 
+    @Pointcut("execution(public * com.monglife..model.*.*(..))")
+    private void domainPointcut() {}
+
     @Pointcut("execution(* com.monglife..*Port.*(..))")
     private void portPointcut() {}
 
@@ -66,7 +69,10 @@ public class LoggingAspect {
     @Pointcut("consumerPointcut() || controllerPointcut() || listenerPointcut() || workerPointcut()")
     private void endPointPointcut() {}
 
-    @Pointcut("consumerPointcut() || controllerPointcut() || listenerPointcut() || workerPointcut() || useCasePointcut() || servicePointcut() || portPointcut() || repositoryPointcut()")
+    @Pointcut("useCasePointcut() || servicePointcut() || domainPointcut() || portPointcut() || repositoryPointcut()")
+    private void businessPointcut() {}
+
+    @Pointcut("consumerPointcut() || controllerPointcut() || listenerPointcut() || workerPointcut() || useCasePointcut() || servicePointcut() || domainPointcut() || portPointcut() || repositoryPointcut()")
     private void targetPointcut() {}
 
     @Value("${spring.config.activate.on-profile}")
@@ -89,14 +95,23 @@ public class LoggingAspect {
         this.objectMapper.configure(SerializationFeature.FAIL_ON_UNWRAPPED_TYPE_IDENTIFIERS, false);
     }
 
+    /**
+     * traceId 생성 및 traceOffset 설정
+     */
     @Around("endPointPointcut()")
     public Object aroundEndPoint(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = MDC.get("traceId");
+        int traceOffset = convertTraceOffset(MDC.get("traceOffset"));
 
         if (traceId == null || traceId.isBlank()) {
             MDC.put("traceId", CommonUtil.randomId());
             traceId = MDC.get("traceId");
+        }
+
+        if (traceOffset < 0) {
+            MDC.put("traceOffset", "0");
+            traceOffset = Integer.parseInt(MDC.get("traceOffset"));
         }
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
@@ -138,6 +153,7 @@ public class LoggingAspect {
     public void afterThrowing(JoinPoint joinPoint, Exception exception) throws Throwable {
 
         String traceId = MDC.get("traceId");
+        int traceOffset = convertTraceOffset(MDC.get("traceOffset"));
 
         // 로그 수집이 필요한 경우
         if (LOG_QUEUE_MAP.containsKey(traceId)) {
@@ -158,7 +174,9 @@ public class LoggingAspect {
             if (logStack != null) {
                 logStack.add(ExceptionLogDto.builder()
                         .traceId(traceId)
-                        .method(String.format("%s#%s", clazzName, methodName))
+                        .traceOffset(traceOffset)
+                        .className(clazzName)
+                        .method(methodName)
                         .message(message)
                         .stackTrace(ArgsUtil.generateExceptionTrace(exception))
                         .build());
@@ -176,6 +194,7 @@ public class LoggingAspect {
     public Object aroundNoTransactional(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = MDC.get("traceId");
+        int traceOffset = convertTraceOffset(MDC.get("traceOffset"));
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
@@ -191,7 +210,9 @@ public class LoggingAspect {
         if (LOG_QUEUE_MAP.containsKey(traceId)) {
             NotTransactionLogDto notTransactionLogDto = NotTransactionLogDto.builder()
                     .traceId(traceId)
-                    .method(String.format("%s#%s", clazzName, methodName))
+                    .traceOffset(traceOffset)
+                    .className(clazzName)
+                    .method(methodName)
                     .args(args)
                     .returnValue(returnValue)
                     .build();
@@ -202,6 +223,14 @@ public class LoggingAspect {
                 logStack.add(notTransactionLogDto);
             }
         }
+
+        // traceOffset 증가
+        if (traceOffset < 0) {
+            MDC.put("traceOffset", "0");
+            traceOffset = convertTraceOffset(MDC.get("traceOffset"));
+        }
+
+        MDC.put("traceOffset", String.valueOf(traceOffset + 1));
 
         return returnValue;
     }
@@ -214,6 +243,7 @@ public class LoggingAspect {
     public Object aroundTransactional(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = MDC.get("traceId");
+        int traceOffset = convertTraceOffset(MDC.get("traceOffset"));
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
@@ -228,7 +258,9 @@ public class LoggingAspect {
         if (LOG_QUEUE_MAP.containsKey(traceId)) {
             TransactionLogDto transactionLogDto = TransactionLogDto.builder()
                     .traceId(traceId)
-                    .method(String.format("%s#%s", clazzName, methodName))
+                    .traceOffset(traceOffset)
+                    .className(clazzName)
+                    .method(methodName)
                     .args(args)
                     .returnValue(returnValue)
                     .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
@@ -241,6 +273,25 @@ public class LoggingAspect {
             }
         }
 
+        // traceOffset 증가
+        if (traceOffset < 0) {
+            MDC.put("traceOffset", "0");
+            traceOffset = convertTraceOffset(MDC.get("traceOffset"));
+        }
+
+        MDC.put("traceOffset", String.valueOf(traceOffset + 1));
+
         return returnValue;
+    }
+
+    /**
+     * traceOffset 정수 변환
+     */
+    private int convertTraceOffset(String traceOffset) {
+        if (traceOffset.chars().allMatch(Character::isDigit)) {
+            return Integer.parseInt(traceOffset);
+        }
+
+        return -1;
     }
 }

@@ -17,8 +17,8 @@ public class ExceptionLogDto extends LogDto {
     private String stackTrace;
 
     @Builder()
-    public ExceptionLogDto(String traceId, String method, String message, String stackTrace) {
-        super(traceId, method);
+    public ExceptionLogDto(String traceId, Integer traceOffset, String className, String method, String message, String stackTrace) {
+        super(traceId, traceOffset, className, method);
         this.message = message;
         this.stackTrace = stackTrace;
     }
