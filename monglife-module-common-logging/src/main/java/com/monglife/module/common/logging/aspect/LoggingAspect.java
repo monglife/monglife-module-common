@@ -183,6 +183,14 @@ public class LoggingAspect {
             }
         }
 
+        // traceOffset 증가
+        if (traceOffset < 0) {
+            MDC.put("traceOffset", "0");
+            traceOffset = convertTraceOffset(MDC.get("traceOffset"));
+        }
+
+        MDC.put("traceOffset", String.valueOf(traceOffset + 1));
+
         throw exception;
     }
 
