@@ -4,8 +4,8 @@ import com.monglife.core.exception.ErrorException;
 import com.monglife.module.common.logging.dto.ExceptionLogDto;
 import com.monglife.module.common.logging.dto.LogDto;
 import com.monglife.module.common.logging.dto.NormalLogDto;
-import com.monglife.module.common.logging.service.LoggingService;
 import com.monglife.module.common.logging.utils.ArgsUtil;
+import com.monglife.module.common.logging.utils.LoggingUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -13,7 +13,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -28,20 +27,20 @@ import java.util.Stack;
 @RequiredArgsConstructor
 public class TargetLoggingAspect {
 
-    private final LoggingService loggingService;
+    private final LoggingUtil loggingUtil;
 
     /**
      * 메서드 로깅 함수
      * @param joinPoint 조인 포인트
      */
-    @Around("com.monglife.module.common.logging.pointcut.LoggingPointcut.allPointcut() && !execution(* com.monglife.module.common.logging.service..*(..))")
+    @Around("com.monglife.module.common.logging.pointcut.LoggingPointcut.allPointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        String traceId = loggingService.getTraceId();
-        int traceOffset = loggingService.getTraceOffset();
+        String traceId = loggingUtil.getTraceId();
+        int traceOffset = loggingUtil.getTraceOffset();
 
         // traceOffset 증가
-        loggingService.increaseTraceOffset();
+        loggingUtil.increaseTraceOffset();
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
@@ -54,7 +53,7 @@ public class TargetLoggingAspect {
         try {
             Object returnValue = joinPoint.proceed();
 
-            if (loggingService.isLoggingMethod(traceId, method)) {
+            if (loggingUtil.isLoggingMethod(traceId, method)) {
                 NormalLogDto normalLogDto = NormalLogDto.builder()
                         .traceId(traceId)
                         .traceOffset(traceOffset)
@@ -64,21 +63,18 @@ public class TargetLoggingAspect {
                         .returnValue(returnValue)
                         .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
                         .build();
-                Stack<LogDto> logStack = loggingService.getLogStack(traceId);
+                Stack<LogDto> logStack = loggingUtil.getLogStack(traceId);
 
                 if (logStack != null && normalLogDto != null) {
                     logStack.add(normalLogDto);
                 }
             }
 
-            if (loggingService.isLoggingMethod(traceId, method)) {
-            }
-
             return returnValue;
 
         } catch (Exception exception) {
 
-            if (loggingService.isLoggingMethod(traceId, method)) {
+            if (loggingUtil.isLoggingMethod(traceId, method)) {
                 String message = exception.getMessage();
 
                 if (exception instanceof ErrorException errorException) {
@@ -95,7 +91,7 @@ public class TargetLoggingAspect {
                         .stackTrace(ArgsUtil.generateExceptionTrace(exception))
                         .build();
 
-                Stack<LogDto> logStack = loggingService.getLogStack(traceId);
+                Stack<LogDto> logStack = loggingUtil.getLogStack(traceId);
 
                 if (logStack != null && exceptionLogDto != null) {
                     logStack.add(exceptionLogDto);

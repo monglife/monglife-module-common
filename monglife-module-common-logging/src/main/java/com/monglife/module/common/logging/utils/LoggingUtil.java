@@ -1,4 +1,4 @@
-package com.monglife.module.common.logging.service;
+package com.monglife.module.common.logging.utils;
 
 import com.monglife.core.utils.CommonUtil;
 import com.monglife.module.common.logging.annotation.DisableLogging;
@@ -13,7 +13,7 @@ import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class LoggingService {
+public class LoggingUtil {
 
     private static final Map<String, Stack<LogDto>> LOG_QUEUE_MAP = new ConcurrentHashMap<>();
 

@@ -39,7 +39,7 @@ public class KafkaService {
 
         kafkaTemplate.send(topic, TransactionEvent.builder()
                 .transactionId(traceId)
-                .traceOffset(traceOffset)
+                .traceOffset(traceOffset + 1)
                 .topic(topic)
                 .data(data)
                 .build());
@@ -69,7 +69,7 @@ public class KafkaService {
 
         kafkaTemplate.send(topicWithProfile, TransactionEvent.builder()
                 .transactionId(traceId)
-                .traceOffset(traceOffset)
+                .traceOffset(traceOffset + 1)
                 .topic(topic)
                 .data(data)
                 .build());

@@ -7,7 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.monglife.module.common.logging.annotation.DisableLoggingCascade;
 import com.monglife.module.common.logging.dto.ExceptionLogDto;
 import com.monglife.module.common.logging.dto.LogDto;
-import com.monglife.module.common.logging.service.LoggingService;
+import com.monglife.module.common.logging.utils.LoggingUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -32,12 +32,12 @@ public class EntryLoggingAspect {
     @Value("${spring.config.activate.on-profile}")
     private String profile;
 
-    private final LoggingService loggingService;
+    private final LoggingUtil loggingUtil;
 
     private final ObjectMapper objectMapper;
 
-    public EntryLoggingAspect(@Autowired LoggingService loggingService) {
-        this.loggingService = loggingService;
+    public EntryLoggingAspect(@Autowired LoggingUtil loggingUtil) {
+        this.loggingUtil = loggingUtil;
 
         JavaTimeModule javaTimeModule = new JavaTimeModule();
         Hibernate6Module hibernate6Module = new Hibernate6Module();
@@ -54,24 +54,24 @@ public class EntryLoggingAspect {
     /**
      * traceId 생성 및 traceOffset 설정
      */
-    @Around("com.monglife.module.common.logging.pointcut.LoggingPointcut.entryPointcut() && !execution(* com.monglife.module.common.logging.service..*(..))")
+    @Around("@annotation(com.monglife.module.common.logging.annotation.EntryLoggingPoint)")
     public Object aroundEntry(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        String traceId = loggingService.getTraceIdOrReset();
-        int traceOffset = loggingService.getTraceOffsetOrReset();
+        String traceId = loggingUtil.getTraceIdOrReset();
+        int traceOffset = loggingUtil.getTraceOffsetOrReset();
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
 
         // 로깅 제외 Entry layer 메서드
         if (!method.isAnnotationPresent(DisableLoggingCascade.class)) {
-            loggingService.resetLogStack(traceId);
+            loggingUtil.resetLogStack(traceId);
         }
 
         try {
             return joinPoint.proceed();
         } finally {
-            Stack<LogDto> logStack = loggingService.getLogStack(traceId);
+            Stack<LogDto> logStack = loggingUtil.getLogStack(traceId);
 
             while (!logStack.isEmpty()) {
                 LogDto logDto = logStack.pop();
@@ -89,7 +89,7 @@ public class EntryLoggingAspect {
                 }
             }
 
-            loggingService.clear(traceId);
+            loggingUtil.clear(traceId);
         }
     }
 }
