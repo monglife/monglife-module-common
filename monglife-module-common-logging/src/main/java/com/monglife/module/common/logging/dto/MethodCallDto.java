@@ -15,11 +15,14 @@ import java.util.Map;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class MethodCallDto extends LogDto {
 
+    private Map<String, Object> args;
+
     private String transaction;
 
     @Builder
-    public MethodCallDto(String traceId, Integer traceOffset, String className, String method, Map<String, Object> args, String transaction) {
-        super(traceId, traceOffset, className, method, args, LogType.METHOD_CALL);
+    public MethodCallDto(String traceId, Integer traceOffset, String entryMethod, String className, String method, Map<String, Object> args, String transaction) {
+        super(traceId, traceOffset, entryMethod, className, method, LogType.METHOD_CALL);
+        this.args = args;
         this.transaction = transaction;
     }
 }

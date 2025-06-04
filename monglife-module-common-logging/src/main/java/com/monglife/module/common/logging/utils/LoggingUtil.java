@@ -78,6 +78,17 @@ public class LoggingUtil {
     }
 
     /**
+     * 엔터리 메서드 이름
+     */
+    public void setEntryMethod(Method method) {
+        MDC.put("entryMethod", method.getName());
+    }
+
+    public String getEntryMethod() {
+        return MDC.get("entryMethod") == null ? "" : MDC.get("entryMethod");
+    }
+
+    /**
      * 로그 추적 오프셋 증가
      * @return 로그 추적 오프셋 증가 후 값
      */

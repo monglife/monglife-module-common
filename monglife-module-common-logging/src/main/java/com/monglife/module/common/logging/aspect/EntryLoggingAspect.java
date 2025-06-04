@@ -9,11 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import java.lang.reflect.Method;
 
 @Order(Integer.MIN_VALUE + 1)
 @Slf4j
@@ -50,8 +53,12 @@ public class EntryLoggingAspect {
     @Around("@within(com.monglife.module.common.logging.annotation.EntryLoggingPoint) || @annotation(com.monglife.module.common.logging.annotation.EntryLoggingPoint)")
     public Object aroundEntry(ProceedingJoinPoint joinPoint) throws Throwable {
 
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+
         loggingUtil.getTraceIdOrReset();
         loggingUtil.getTraceOffsetOrReset();
+        loggingUtil.setEntryMethod(method);
 
         try {
             return joinPoint.proceed();

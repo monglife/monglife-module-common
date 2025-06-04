@@ -20,8 +20,8 @@ public class MethodReturnLogDto extends LogDto {
     private String transaction;
 
     @Builder
-    public MethodReturnLogDto(String traceId, Integer traceOffset, String className, String method, Map<String, Object> args, Object returnValue, String transaction) {
-        super(traceId, traceOffset, className, method, args, LogType.METHOD_RETURN);
+    public MethodReturnLogDto(String traceId, Integer traceOffset, String entryMethod, String className, String method, Object returnValue, String transaction) {
+        super(traceId, traceOffset, entryMethod, className, method, LogType.METHOD_RETURN);
         this.returnValue = returnValue;
         this.transaction = transaction;
     }

@@ -37,6 +37,7 @@ public class TargetLoggingAspect {
 
         String traceId = loggingUtil.getTraceId();
         int traceOffset = loggingUtil.getTraceOffset();
+        String entryMethod = loggingUtil.getEntryMethod();
 
         // traceOffset 증가
         loggingUtil.increaseTraceOffset();
@@ -54,6 +55,7 @@ public class TargetLoggingAspect {
                 MethodCallDto methodCallDto = MethodCallDto.builder()
                         .traceId(traceId)
                         .traceOffset(traceOffset)
+                        .entryMethod(entryMethod)
                         .className(clazzName)
                         .method(methodName)
                         .args(args)
@@ -69,9 +71,9 @@ public class TargetLoggingAspect {
                 MethodReturnLogDto methodReturnLogDto = MethodReturnLogDto.builder()
                         .traceId(traceId)
                         .traceOffset(traceOffset)
+                        .entryMethod(entryMethod)
                         .className(clazzName)
                         .method(methodName)
-                        .args(args)
                         .returnValue(returnValue)
                         .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
                         .build();
@@ -93,9 +95,9 @@ public class TargetLoggingAspect {
                 ExceptionLogDto exceptionLogDto = ExceptionLogDto.builder()
                         .traceId(traceId)
                         .traceOffset(traceOffset)
+                        .entryMethod(entryMethod)
                         .className(clazzName)
                         .method(methodName)
-                        .args(args)
                         .message(message)
                         .stackTrace(ArgsUtil.generateExceptionTrace(exception))
                         .build();
