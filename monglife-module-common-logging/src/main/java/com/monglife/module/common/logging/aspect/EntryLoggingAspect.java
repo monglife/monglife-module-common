@@ -29,7 +29,6 @@ import java.util.Stack;
 @Aspect
 @Component
 @Profile("!test")
-@RequiredArgsConstructor
 public class EntryLoggingAspect {
 
     @Value("${spring.config.activate.on-profile}")
