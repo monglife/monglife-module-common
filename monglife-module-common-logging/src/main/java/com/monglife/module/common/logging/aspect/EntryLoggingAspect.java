@@ -63,25 +63,7 @@ public class EntryLoggingAspect {
     @Pointcut("execution(* com.monglife..*Worker.*(..))")
     private void workerPointcut() {}
 
-    @Pointcut("execution(* com.monglife..*Listener.*(..))")
-    private void listenerPointcut() {}
-
-    @Pointcut("execution(* com.monglife..*UseCase.*(..))")
-    private void useCasePointcut() {}
-
-    @Pointcut("execution(* com.monglife..*Service.*(..))")
-    private void servicePointcut() {}
-
-    @Pointcut("execution(public * com.monglife..model.*.*(..))")
-    private void domainPointcut() {}
-
-    @Pointcut("execution(* com.monglife..*Port.*(..))")
-    private void portPointcut() {}
-
-    @Pointcut("execution(* com.monglife..*Repository.*(..))")
-    private void repositoryPointcut() {}
-
-    @Pointcut("consumerPointcut() || controllerPointcut() || listenerPointcut() || workerPointcut()")
+    @Pointcut("consumerPointcut() || controllerPointcut() || workerPointcut()")
     private void entryPointcut() {}
 
     /**
