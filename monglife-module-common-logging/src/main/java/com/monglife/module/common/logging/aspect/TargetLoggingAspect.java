@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
@@ -32,47 +31,11 @@ public class TargetLoggingAspect {
 
     private final LoggingService loggingService;
 
-    @Pointcut("execution(* com.monglife..*Consumer.*(..))")
-    private void consumerPointcut() {}
-
-    @Pointcut("execution(* com.monglife..*Controller.*(..))")
-    private void controllerPointcut() {}
-
-    @Pointcut("execution(* com.monglife..*Worker.*(..))")
-    private void workerPointcut() {}
-
-    @Pointcut("execution(* com.monglife..*UseCase.*(..))")
-    private void useCasePointcut() {}
-
-    @Pointcut("execution(* com.monglife..*Service.*(..))")
-    private void servicePointcut() {}
-
-    @Pointcut("execution(public * com.monglife..model.*.*(..))")
-    private void domainPointcut() {}
-
-    @Pointcut("execution(* com.monglife..*Port.*(..))")
-    private void portPointcut() {}
-
-    @Pointcut("execution(* com.monglife..*Listener.*(..))")
-    private void listenerPointcut() {}
-
-    @Pointcut("execution(* com.monglife..*Repository.*(..))")
-    private void repositoryPointcut() {}
-
-    @Pointcut("consumerPointcut() || controllerPointcut() || workerPointcut()")
-    private void entryPointcut() {}
-
-    @Pointcut("useCasePointcut() || servicePointcut() || domainPointcut() || listenerPointcut() || portPointcut() || repositoryPointcut()")
-    private void businessPointcut() {}
-
-    @Pointcut("entryPointcut() || businessPointcut()")
-    private void targetPointcut() {}
-
     /**
      * 메서드 로깅 함수
      * @param joinPoint 조인 포인트
      */
-    @Around("targetPointcut() && !execution(* com.monglife.module.common.logging..*(..))")
+    @Around("com.monglife.module.common.logging.pointcut.LoggingPointcut.allPointcut() && !com.monglife.module.common.logging.pointcut.LoggingPointcut.loggingModulePointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = loggingService.getTraceId();

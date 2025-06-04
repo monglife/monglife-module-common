@@ -8,12 +8,10 @@ import com.monglife.module.common.logging.annotation.DisableLoggingCascade;
 import com.monglife.module.common.logging.dto.ExceptionLogDto;
 import com.monglife.module.common.logging.dto.LogDto;
 import com.monglife.module.common.logging.service.LoggingService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,22 +51,10 @@ public class EntryLoggingAspect {
         this.objectMapper.configure(SerializationFeature.FAIL_ON_UNWRAPPED_TYPE_IDENTIFIERS, false);
     }
 
-    @Pointcut("execution(* com.monglife..*Consumer.*(..))")
-    private void consumerPointcut() {}
-
-    @Pointcut("execution(* com.monglife..*Controller.*(..))")
-    private void controllerPointcut() {}
-
-    @Pointcut("execution(* com.monglife..*Worker.*(..))")
-    private void workerPointcut() {}
-
-    @Pointcut("consumerPointcut() || controllerPointcut() || workerPointcut()")
-    private void entryPointcut() {}
-
     /**
      * traceId 생성 및 traceOffset 설정
      */
-    @Around("entryPointcut() && !execution(* com.monglife.module.common.logging..*(..))")
+    @Around("com.monglife.module.common.logging.pointcut.LoggingPointcut.entryPointcut() && !com.monglife.module.common.logging.pointcut.LoggingPointcut.loggingModulePointcut()")
     public Object aroundEntry(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = loggingService.getTraceIdOrReset();
