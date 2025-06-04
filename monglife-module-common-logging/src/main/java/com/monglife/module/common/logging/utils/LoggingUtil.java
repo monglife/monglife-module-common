@@ -98,6 +98,10 @@ public class LoggingUtil {
         MDC.put("entryMethod", String.format("%s#%s", clazzName, methodName));
     }
 
+    /**
+     * 엔터리 메서드 조회
+     * @return 엔터리 메서드
+     */
     public String getEntryMethod() {
         return MDC.get("entryMethod") == null ? "" : MDC.get("entryMethod");
     }
@@ -109,6 +113,11 @@ public class LoggingUtil {
         MDC.clear();
     }
 
+    /**
+     * Log Dto Json 직렬화
+     * @param logDto 로그 Dto
+     * @return Json 직렬화 문자열
+     */
     public String parseJson(LogDto logDto) {
         try {
             return objectMapper.writeValueAsString(logDto);

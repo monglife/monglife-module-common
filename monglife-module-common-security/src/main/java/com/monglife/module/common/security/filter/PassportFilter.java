@@ -2,7 +2,6 @@ package com.monglife.module.common.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.monglife.core.enums.role.RoleCode;
-import com.monglife.core.utils.CommonUtil;
 import com.monglife.core.vo.passport.PassportDataAccountVo;
 import com.monglife.core.vo.passport.PassportDataAppVersionVo;
 import com.monglife.core.vo.passport.PassportDataVo;
@@ -32,10 +31,9 @@ public class PassportFilter extends GenericFilterBean {
     /**
      * Header 에 담긴 Passport Json 문자열을 파싱하여 인증 객체를 생성하고, SecurityContext 에 저장한다.
      *
-     * @param servletRequest  The request to process
-     * @param response The response associated with the request
-     * @param chain    Provides access to the next filter in the chain for this filter to pass the request and response
-     *                     to for further processing
+     * @param servletRequest The request to process
+     * @param response       The response associated with the request
+     * @param chain          Provides access to the next filter in the chain for this filter to pass the request and response to for further processing
      */
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse response, FilterChain chain) throws IOException, ServletException {

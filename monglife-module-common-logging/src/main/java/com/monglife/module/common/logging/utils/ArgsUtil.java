@@ -55,6 +55,11 @@ public class ArgsUtil {
         return argsMap;
     }
 
+    /**
+     * 예외 추적 문자열 생성
+     * @param throwable 예외 객체
+     * @return 예외 추적 문자열
+     */
     public static String generateExceptionTrace(Throwable throwable) {
 
         StringBuilder exceptionTraceBuilder = new StringBuilder();
@@ -85,6 +90,11 @@ public class ArgsUtil {
         return exceptionTraceBuilder.toString();
     }
 
+    /**
+     * monglife 패키지 해위 여부 확인
+     * @param arg 메서드 파라 미터
+     * @return monglife 패키지 하위 여부
+     */
     private static boolean cantObjectPackage(Object arg) {
         return arg != null
                 && arg.getClass().getPackage() != null
