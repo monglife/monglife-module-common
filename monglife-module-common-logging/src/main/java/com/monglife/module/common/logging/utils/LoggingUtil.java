@@ -31,6 +31,25 @@ public class LoggingUtil {
     }
 
     /**
+     * 로깅 필요 메서드 여부
+     */
+    public boolean isLoggingMethod(String traceId, Method method) {
+        return traceId != null && !method.isAnnotationPresent(DisableLogging.class);
+    }
+
+    /**
+     * 로그 추적 ID 초기화
+     */
+    public void setTraceId() {
+
+        String traceId = MDC.get("traceId");
+
+        if (traceId == null || traceId.isBlank()) {
+            MDC.put("traceId", CommonUtil.randomId());
+        }
+    }
+
+    /**
      * 로그 추적 ID 조회
      * @return 로그 추적 ID
      */
@@ -39,19 +58,26 @@ public class LoggingUtil {
     }
 
     /**
-     * 로그 추적 ID 조회 (없는 경우 초기화)
-     * @return 로그 추적 ID
+     * 로그 추적 오프셋 조회 (없는 경우 초기화)
      */
-    public String getTraceIdOrReset() {
+    public void setTraceOffset() {
+        int traceOffset = this.convertTraceOffset(MDC.get("traceOffset"));
 
-        String traceId = MDC.get("traceId");
-
-        if (traceId == null || traceId.isBlank()) {
-            MDC.put("traceId", CommonUtil.randomId());
-            traceId = MDC.get("traceId");
+        if (traceOffset == Integer.MIN_VALUE) {
+            MDC.put("traceOffset", "-1");
         }
+    }
 
-        return traceId;
+    /**
+     * 로그 추적 오프셋 증가
+     */
+    public void increaseTraceOffset() {
+        int traceOffset = this.convertTraceOffset(MDC.get("traceOffset"));
+
+        if (traceOffset != Integer.MIN_VALUE) {
+            traceOffset += 1;
+            MDC.put("traceOffset", String.valueOf(traceOffset));
+        }
     }
 
     /**
@@ -60,21 +86,6 @@ public class LoggingUtil {
      */
     public int getTraceOffset() {
         return this.convertTraceOffset(MDC.get("traceOffset"));
-    }
-
-    /**
-     * 로그 추적 오프셋 조회 (없는 경우 초기화)
-     * @return 로그 추적 오프셋
-     */
-    public int getTraceOffsetOrReset() {
-        int traceOffset = this.convertTraceOffset(MDC.get("traceOffset"));
-
-        if (traceOffset == Integer.MIN_VALUE) {
-            MDC.put("traceOffset", "0");
-            traceOffset = this.convertTraceOffset(MDC.get("traceOffset"));
-        }
-
-        return traceOffset;
     }
 
     /**
@@ -92,21 +103,6 @@ public class LoggingUtil {
     }
 
     /**
-     * 로그 추적 오프셋 증가
-     * @return 로그 추적 오프셋 증가 후 값
-     */
-    public int increaseTraceOffset() {
-        int traceOffset = this.convertTraceOffset(MDC.get("traceOffset"));
-
-        if (traceOffset != Integer.MIN_VALUE) {
-            traceOffset += 1;
-            MDC.put("traceOffset", String.valueOf(traceOffset));
-        }
-
-        return traceOffset;
-    }
-
-    /**
      * 스레드 캐시 삭제
      */
     public void clear() {
@@ -119,13 +115,6 @@ public class LoggingUtil {
         } catch (Exception e) {
             return "";
         }
-    }
-
-    /**
-     * 로깅 필요 메서드 여부
-     */
-    public boolean isLoggingMethod(String traceId, Method method) {
-        return traceId != null && !method.isAnnotationPresent(DisableLogging.class);
     }
 
     /**

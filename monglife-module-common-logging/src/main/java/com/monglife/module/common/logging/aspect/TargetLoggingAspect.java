@@ -35,12 +35,12 @@ public class TargetLoggingAspect {
     @Around("com.monglife.module.common.logging.pointcut.LoggingPointcut.allPointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 
+        // traceOffset 증가
+        loggingUtil.increaseTraceOffset();
+
         String traceId = loggingUtil.getTraceId();
         int traceOffset = loggingUtil.getTraceOffset();
         String entryMethod = loggingUtil.getEntryMethod();
-
-        // traceOffset 증가
-        loggingUtil.increaseTraceOffset();
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();

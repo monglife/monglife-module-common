@@ -33,20 +33,20 @@ public class KafkaService {
         }
 
         if (traceOffset == Integer.MIN_VALUE) {
-            MDC.put("traceOffset", "0");
+            MDC.put("traceOffset", "-1");
             traceOffset = convertTraceOffset(MDC.get("traceOffset"));
         }
 
         kafkaTemplate.send(topic, TransactionEvent.builder()
                 .transactionId(traceId)
-                .traceOffset(traceOffset + 1)
+                .traceOffset(traceOffset)
                 .topic(topic)
                 .data(data)
                 .build());
     }
 
     /**
-     * 이벤트 발생
+     * 커밋 이벤트 발생
      * @param topic 이벤트 토픽 (주제)
      * @param data 이벤트 본문
      */
@@ -63,13 +63,13 @@ public class KafkaService {
         }
 
         if (traceOffset == Integer.MIN_VALUE) {
-            MDC.put("traceOffset", "0");
+            MDC.put("traceOffset", "-1");
             traceOffset = convertTraceOffset(MDC.get("traceOffset"));
         }
 
         kafkaTemplate.send(topicWithProfile, TransactionEvent.builder()
                 .transactionId(traceId)
-                .traceOffset(traceOffset + 1)
+                .traceOffset(traceOffset)
                 .topic(topic)
                 .data(data)
                 .build());
