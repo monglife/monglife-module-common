@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Method;
 import java.util.Stack;
 
-@Order(Integer.MAX_VALUE - 1)
+@Order(Integer.MIN_VALUE + 1)
 @Slf4j
 @Aspect
 @Component
@@ -54,7 +54,7 @@ public class EntryLoggingAspect {
     /**
      * traceId 생성 및 traceOffset 설정
      */
-    @Around("com.monglife.module.common.logging.pointcut.LoggingPointcut.entryPointcut() && !com.monglife.module.common.logging.pointcut.LoggingPointcut.loggingModulePointcut()")
+    @Around("com.monglife.module.common.logging.pointcut.LoggingPointcut.entryPointcut() && !execution(* com.monglife.module.common.logging.service..*(..))")
     public Object aroundEntry(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = loggingService.getTraceIdOrReset();

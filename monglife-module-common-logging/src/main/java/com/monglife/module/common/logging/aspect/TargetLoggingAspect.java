@@ -21,7 +21,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Stack;
 
-@Order(Integer.MAX_VALUE)
 @Slf4j
 @Aspect
 @Component
@@ -35,7 +34,7 @@ public class TargetLoggingAspect {
      * 메서드 로깅 함수
      * @param joinPoint 조인 포인트
      */
-    @Around("com.monglife.module.common.logging.pointcut.LoggingPointcut.allPointcut() && !com.monglife.module.common.logging.pointcut.LoggingPointcut.loggingModulePointcut()")
+    @Around("com.monglife.module.common.logging.pointcut.LoggingPointcut.allPointcut() && !execution(* com.monglife.module.common.logging.service..*(..))")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = loggingService.getTraceId();
@@ -52,13 +51,11 @@ public class TargetLoggingAspect {
 
         Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
 
-        LogDto logDto = null;
-
         try {
             Object returnValue = joinPoint.proceed();
 
             if (loggingService.isLoggingMethod(traceId, method)) {
-                logDto = NormalLogDto.builder()
+                NormalLogDto normalLogDto = NormalLogDto.builder()
                         .traceId(traceId)
                         .traceOffset(traceOffset)
                         .className(clazzName)
@@ -67,6 +64,14 @@ public class TargetLoggingAspect {
                         .returnValue(returnValue)
                         .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
                         .build();
+                Stack<LogDto> logStack = loggingService.getLogStack(traceId);
+
+                if (logStack != null && normalLogDto != null) {
+                    logStack.add(normalLogDto);
+                }
+            }
+
+            if (loggingService.isLoggingMethod(traceId, method)) {
             }
 
             return returnValue;
@@ -80,7 +85,7 @@ public class TargetLoggingAspect {
                     message = errorException.getErrorCode() == null ? "" : errorException.getErrorCode().getMessage();
                 }
 
-                logDto = ExceptionLogDto.builder()
+                ExceptionLogDto exceptionLogDto = ExceptionLogDto.builder()
                         .traceId(traceId)
                         .traceOffset(traceOffset)
                         .className(clazzName)
@@ -89,18 +94,16 @@ public class TargetLoggingAspect {
                         .message(message)
                         .stackTrace(ArgsUtil.generateExceptionTrace(exception))
                         .build();
+
+                Stack<LogDto> logStack = loggingService.getLogStack(traceId);
+
+                if (logStack != null && exceptionLogDto != null) {
+                    logStack.add(exceptionLogDto);
+                }
             }
 
             throw exception;
 
-        } finally {
-            if (loggingService.isLoggingMethod(traceId, method)) {
-                Stack<LogDto> logStack = loggingService.getLogStack(traceId);
-
-                if (logStack != null && logDto != null) {
-                    logStack.add(logDto);
-                }
-            }
         }
     }
 }

@@ -34,9 +34,6 @@ public class LoggingPointcut {
     @Pointcut("execution(* com.monglife..*Repository.*(..))")
     private void repositoryPointcut() {}
 
-    @Pointcut("execution(* com.monglife.module.common.logging..*(..))")
-    public void loggingModulePointcut() {}
-
     // group point cut
     @Pointcut("consumerPointcut() || controllerPointcut() || workerPointcut() || initializerPointcut()")
     public void entryPointcut() {}

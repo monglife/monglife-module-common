@@ -5,14 +5,14 @@ import com.monglife.module.common.logging.annotation.DisableLogging;
 import com.monglife.module.common.logging.annotation.DisableLoggingCascade;
 import com.monglife.module.common.logging.dto.LogDto;
 import org.slf4j.MDC;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service
+@Component
 public class LoggingService {
 
     private static final Map<String, Stack<LogDto>> LOG_QUEUE_MAP = new ConcurrentHashMap<>();
