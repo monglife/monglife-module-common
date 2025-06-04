@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.lang.reflect.Method;
@@ -67,7 +68,7 @@ public class LoggingAspect {
     private void repositoryPointcut() {}
 
     @Pointcut("consumerPointcut() || controllerPointcut() || listenerPointcut() || workerPointcut()")
-    private void endPointPointcut() {}
+    private void entryPointcut() {}
 
     @Pointcut("useCasePointcut() || servicePointcut() || domainPointcut() || portPointcut() || repositoryPointcut()")
     private void businessPointcut() {}
@@ -98,7 +99,7 @@ public class LoggingAspect {
     /**
      * traceId 생성 및 traceOffset 설정
      */
-    @Around("endPointPointcut()")
+    @Around("entryPointcut()")
     public Object aroundEndPoint(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = MDC.get("traceId");
@@ -109,9 +110,8 @@ public class LoggingAspect {
             traceId = MDC.get("traceId");
         }
 
-        if (traceOffset < 0) {
+        if (traceOffset == Integer.MIN_VALUE) {
             MDC.put("traceOffset", "0");
-            traceOffset = Integer.parseInt(MDC.get("traceOffset"));
         }
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
@@ -149,60 +149,20 @@ public class LoggingAspect {
         }
     }
 
-    @AfterThrowing(value = "endPointPointcut() && !@annotation(com.monglife.module.common.logging.annotation.DisableLogging)", throwing = "exception")
-    public void afterThrowing(JoinPoint joinPoint, Exception exception) throws Throwable {
-
-        String traceId = MDC.get("traceId");
-        int traceOffset = convertTraceOffset(MDC.get("traceOffset"));
-
-        // 로그 수집이 필요한 경우
-        if (LOG_QUEUE_MAP.containsKey(traceId)) {
-            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-            Method method = signature.getMethod();
-
-            String clazzName = method.getDeclaringClass().getName();
-            String methodName = method.getName();
-
-            String message = exception.getMessage();
-
-            if (exception instanceof ErrorException errorException) {
-                message = errorException.getErrorCode() == null ? "" : errorException.getErrorCode().getMessage();
-            }
-
-            Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
-
-            if (logStack != null) {
-                logStack.add(ExceptionLogDto.builder()
-                        .traceId(traceId)
-                        .traceOffset(traceOffset)
-                        .className(clazzName)
-                        .method(methodName)
-                        .message(message)
-                        .stackTrace(ArgsUtil.generateExceptionTrace(exception))
-                        .build());
-            }
-        }
-
-        // traceOffset 증가
-        if (traceOffset < 0) {
-            MDC.put("traceOffset", "0");
-            traceOffset = convertTraceOffset(MDC.get("traceOffset"));
-        }
-
-        MDC.put("traceOffset", String.valueOf(traceOffset + 1));
-
-        throw exception;
-    }
-
     /**
      * None Transactional 메서드 로깅 함수
      * @param joinPoint 조인 포인트
      */
-    @Around("targetPointcut() && !@annotation(com.monglife.module.common.logging.annotation.DisableLogging) && !@annotation(org.springframework.transaction.annotation.Transactional)")
-    public Object aroundNoTransactional(ProceedingJoinPoint joinPoint) throws Throwable {
+    @Around("businessPointcut() && !@annotation(com.monglife.module.common.logging.annotation.DisableLogging)")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String traceId = MDC.get("traceId");
         int traceOffset = convertTraceOffset(MDC.get("traceOffset"));
+
+        // traceOffset 증가
+        if (traceOffset != Integer.MIN_VALUE) {
+            MDC.put("traceOffset", String.valueOf(traceOffset + 1));
+        }
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
@@ -212,84 +172,71 @@ public class LoggingAspect {
 
         Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
 
-        Object returnValue = joinPoint.proceed();
+        try {
+            Object returnValue = joinPoint.proceed();
 
-        // 로그 수집이 필요한 경우
-        if (LOG_QUEUE_MAP.containsKey(traceId)) {
-            NotTransactionLogDto notTransactionLogDto = NotTransactionLogDto.builder()
-                    .traceId(traceId)
-                    .traceOffset(traceOffset)
-                    .className(clazzName)
-                    .method(methodName)
-                    .args(args)
-                    .returnValue(returnValue)
-                    .build();
+            // 로그 수집이 필요한 경우
+            if (LOG_QUEUE_MAP.containsKey(traceId)) {
+                LogDto logDto;
 
-            Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
+                if (!method.isAnnotationPresent(Transactional.class)) {
+                    // 논 트랜 잭션 메서드
+                    logDto = NotTransactionLogDto.builder()
+                            .traceId(traceId)
+                            .traceOffset(traceOffset)
+                            .className(clazzName)
+                            .method(methodName)
+                            .args(args)
+                            .returnValue(returnValue)
+                            .build();
+                } else {
+                    // 트랜 잭션 메서드
+                    logDto = TransactionLogDto.builder()
+                            .traceId(traceId)
+                            .traceOffset(traceOffset)
+                            .className(clazzName)
+                            .method(methodName)
+                            .args(args)
+                            .returnValue(returnValue)
+                            .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
+                            .build();
+                }
 
-            if (logStack != null) {
-                logStack.add(notTransactionLogDto);
+                Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
+
+                if (logStack != null && logDto != null) {
+                    logStack.add(logDto);
+                }
             }
-        }
 
-        // traceOffset 증가
-        if (traceOffset < 0) {
-            MDC.put("traceOffset", "0");
-            traceOffset = convertTraceOffset(MDC.get("traceOffset"));
-        }
+            return returnValue;
 
-        MDC.put("traceOffset", String.valueOf(traceOffset + 1));
+        } catch (Exception exception) {
+            // 로그 수집이 필요한 경우
+            if (LOG_QUEUE_MAP.containsKey(traceId)) {
+                String message = exception.getMessage();
 
-        return returnValue;
-    }
+                if (exception instanceof ErrorException errorException) {
+                    message = errorException.getErrorCode() == null ? "" : errorException.getErrorCode().getMessage();
+                }
 
-    /**
-     * Transactional 메서드 로깅 함수
-     * @param joinPoint 조인 포인트
-     */
-    @Around("targetPointcut() && !@annotation(com.monglife.module.common.logging.annotation.DisableLogging) && @annotation(org.springframework.transaction.annotation.Transactional)")
-    public Object aroundTransactional(ProceedingJoinPoint joinPoint) throws Throwable {
+                Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
 
-        String traceId = MDC.get("traceId");
-        int traceOffset = convertTraceOffset(MDC.get("traceOffset"));
-
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Method method = signature.getMethod();
-
-        String clazzName = method.getDeclaringClass().getName();
-        String methodName = method.getName();
-
-        Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
-
-        Object returnValue = joinPoint.proceed();
-
-        if (LOG_QUEUE_MAP.containsKey(traceId)) {
-            TransactionLogDto transactionLogDto = TransactionLogDto.builder()
-                    .traceId(traceId)
-                    .traceOffset(traceOffset)
-                    .className(clazzName)
-                    .method(methodName)
-                    .args(args)
-                    .returnValue(returnValue)
-                    .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
-                    .build();
-
-            Stack<LogDto> logStack = LOG_QUEUE_MAP.get(traceId);
-
-            if (logStack != null) {
-                logStack.add(transactionLogDto);
+                if (logStack != null) {
+                    logStack.add(ExceptionLogDto.builder()
+                            .traceId(traceId)
+                            .traceOffset(traceOffset)
+                            .className(clazzName)
+                            .method(methodName)
+                            .args(args)
+                            .message(message)
+                            .stackTrace(ArgsUtil.generateExceptionTrace(exception))
+                            .build());
+                }
             }
+
+            throw exception;
         }
-
-        // traceOffset 증가
-        if (traceOffset < 0) {
-            MDC.put("traceOffset", "0");
-            traceOffset = convertTraceOffset(MDC.get("traceOffset"));
-        }
-
-        MDC.put("traceOffset", String.valueOf(traceOffset + 1));
-
-        return returnValue;
     }
 
     /**
@@ -300,6 +247,6 @@ public class LoggingAspect {
             return Integer.parseInt(traceOffset);
         }
 
-        return -1;
+        return Integer.MIN_VALUE;
     }
 }

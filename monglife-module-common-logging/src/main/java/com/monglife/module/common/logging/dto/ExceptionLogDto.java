@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,8 +19,8 @@ public class ExceptionLogDto extends LogDto {
     private String stackTrace;
 
     @Builder()
-    public ExceptionLogDto(String traceId, Integer traceOffset, String className, String method, String message, String stackTrace) {
-        super(traceId, traceOffset, className, method);
+    public ExceptionLogDto(String traceId, Integer traceOffset, String className, String method, Map<String, Object> args, String message, String stackTrace) {
+        super(traceId, traceOffset, className, method, args);
         this.message = message;
         this.stackTrace = stackTrace;
     }

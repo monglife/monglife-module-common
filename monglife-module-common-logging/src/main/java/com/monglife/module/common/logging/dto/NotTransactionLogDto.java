@@ -14,14 +14,11 @@ import java.util.Map;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class NotTransactionLogDto extends LogDto {
 
-    private Map<String, Object> args;
-
     private Object returnValue;
 
     @Builder
     public NotTransactionLogDto(String traceId, Integer traceOffset, String className, String method, Map<String, Object> args, Object returnValue) {
-        super(traceId, traceOffset, className, method);
-        this.args = args;
+        super(traceId, traceOffset, className, method, args);
         this.returnValue = returnValue;
     }
 }

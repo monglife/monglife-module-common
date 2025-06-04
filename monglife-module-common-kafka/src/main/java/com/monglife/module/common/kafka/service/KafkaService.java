@@ -32,9 +32,9 @@ public class KafkaService {
             traceId = MDC.get("traceId");
         }
 
-        if (traceOffset < 0) {
+        if (traceOffset == Integer.MIN_VALUE) {
             MDC.put("traceOffset", "0");
-            traceOffset = Integer.parseInt(MDC.get("traceOffset"));
+            traceOffset = convertTraceOffset(MDC.get("traceOffset"));
         }
 
         kafkaTemplate.send(topic, TransactionEvent.builder()
@@ -62,9 +62,9 @@ public class KafkaService {
             traceId = MDC.get("traceId");
         }
 
-        if (traceOffset < 0) {
+        if (traceOffset == Integer.MIN_VALUE) {
             MDC.put("traceOffset", "0");
-            traceOffset = Integer.parseInt(MDC.get("traceOffset"));
+            traceOffset = convertTraceOffset(MDC.get("traceOffset"));
         }
 
         kafkaTemplate.send(topicWithProfile, TransactionEvent.builder()
@@ -83,6 +83,6 @@ public class KafkaService {
             return Integer.parseInt(traceOffset);
         }
 
-        return -1;
+        return Integer.MIN_VALUE;
     }
 }
