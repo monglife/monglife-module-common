@@ -1,4 +1,4 @@
-package com.monglife.module.common.kafka.aspect;
+package com.monglife.module.common.logging.aspect;
 
 import com.monglife.module.common.kafka.event.TransactionEvent;
 import org.aspectj.lang.ProceedingJoinPoint;

@@ -24,22 +24,9 @@ public class KafkaService {
      */
     public <T> void generateEvent(String topic, T data) {
 
-        String traceId = MDC.get("traceId");
-        int traceOffset = convertTraceOffset(MDC.get("traceOffset"));
-
-        if (traceId == null || traceId.isBlank()) {
-            MDC.put("traceId", CommonUtil.randomId());
-            traceId = MDC.get("traceId");
-        }
-
-        if (traceOffset == Integer.MIN_VALUE) {
-            MDC.put("traceOffset", "-1");
-            traceOffset = convertTraceOffset(MDC.get("traceOffset"));
-        }
-
         kafkaTemplate.send(topic, TransactionEvent.builder()
-                .transactionId(traceId)
-                .traceOffset(traceOffset)
+                .transactionId(MDC.get("traceId"))
+                .traceOffset(convertTraceOffset(MDC.get("traceOffset")))
                 .topic(topic)
                 .data(data)
                 .build());
@@ -54,23 +41,10 @@ public class KafkaService {
 
         String topicWithProfile = (profile != null && !profile.isBlank() ? profile + "." : "unknown.") + topic;
 
-        String traceId = MDC.get("traceId");
-        int traceOffset = convertTraceOffset(MDC.get("traceOffset"));
-
-        if (traceId == null || traceId.isBlank()) {
-            MDC.put("traceId", CommonUtil.randomId());
-            traceId = MDC.get("traceId");
-        }
-
-        if (traceOffset == Integer.MIN_VALUE) {
-            MDC.put("traceOffset", "-1");
-            traceOffset = convertTraceOffset(MDC.get("traceOffset"));
-        }
-
         kafkaTemplate.send(topicWithProfile, TransactionEvent.builder()
-                .transactionId(traceId)
-                .traceOffset(traceOffset)
-                .topic(topic)
+                .transactionId(MDC.get("traceId"))
+                .traceOffset(convertTraceOffset(MDC.get("traceOffset")))
+                .topic(topicWithProfile)
                 .data(data)
                 .build());
     }
