@@ -1,4 +1,4 @@
-package com.monglife.module.common.logging.aspect;
+package com.monglife.module.common.kafka.aspect;
 
 import com.monglife.module.common.kafka.event.TransactionEvent;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Profile("!test")
 public class KafkaListenerAspect {
 
-    @Around("@annotation(org.springframework.kafka.annotation.KafkaListener)")
+    @Around("@annotation(org.springframework.kafka.annotation.KafkaListener) && @annotation(com.monglife.module.common.logging.annotation.EntryLoggingPoint)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 
         Object[] args = joinPoint.getArgs();
