@@ -1,13 +1,11 @@
 package com.monglife.module.common.logging.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.monglife.core.utils.CommonUtil;
 import com.monglife.module.common.logging.annotation.DisableLogging;
 import com.monglife.module.common.logging.dto.LogDto;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
@@ -17,17 +15,19 @@ public class LoggingUtil {
 
     private final ObjectMapper objectMapper;
 
-    public LoggingUtil() {
-        JavaTimeModule javaTimeModule = new JavaTimeModule();
-        Hibernate6Module hibernate6Module = new Hibernate6Module();
-        hibernate6Module.disable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
+    public LoggingUtil(@Qualifier("LoggingObjectMapper") ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(javaTimeModule);
-        this.objectMapper.registerModule(hibernate6Module);
-        this.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        this.objectMapper.configure(SerializationFeature.FAIL_ON_SELF_REFERENCES, false);
-        this.objectMapper.configure(SerializationFeature.FAIL_ON_UNWRAPPED_TYPE_IDENTIFIERS, false);
+    /**
+     * json 문자열 변환
+     */
+    public <T> String toJson(T obj) {
+        try {
+            return this.objectMapper.writeValueAsString(obj);
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     /**

@@ -5,5 +5,5 @@ dependencies {
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate6'
 
-    implementation project(":monglife-module-common-logging-core")
+    api project(":monglife-module-common-logging-core")
 }
