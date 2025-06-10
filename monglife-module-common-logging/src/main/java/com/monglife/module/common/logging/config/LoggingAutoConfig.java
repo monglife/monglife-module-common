@@ -17,7 +17,7 @@ public class LoggingAutoConfig {
      * 로깅용 objectMapper
      */
     @Bean("LoggingObjectMapper")
-    @ConditionalOnClass(Hibernate6Module.class)
+    @ConditionalOnClass(name = "com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module")
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         JavaTimeModule javaTimeModule = new JavaTimeModule();
