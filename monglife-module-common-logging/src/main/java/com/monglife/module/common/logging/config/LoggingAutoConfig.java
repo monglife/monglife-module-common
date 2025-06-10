@@ -1,6 +1,5 @@
 package com.monglife.module.common.logging.config;
 
-import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -22,9 +21,10 @@ public class LoggingAutoConfig {
 
         try {
             Class<?> clazz = Class.forName("com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module");
+            Class<?> enumClazz = Class.forName("com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module$Feature");
             Object hibernate6Module = clazz.getDeclaredConstructor().newInstance();
-            clazz.getMethod("disable", Enum.class).invoke(hibernate6Module, Enum.valueOf((Class<Enum>) Class.forName("com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module$Feature"),"FORCE_LAZY_LOADING"));
-            objectMapper.registerModule((Module) hibernate6Module);
+            clazz.getMethod("disable", enumClazz).invoke(hibernate6Module, Enum.valueOf((Class<Enum>) Class.forName("com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module$Feature"),"FORCE_LAZY_LOADING"));
+            objectMapper.registerModule((com.fasterxml.jackson.databind.Module) hibernate6Module);
         } catch (ClassNotFoundException ignored) {
         } catch (Exception e) {
             throw new RuntimeException(e);
