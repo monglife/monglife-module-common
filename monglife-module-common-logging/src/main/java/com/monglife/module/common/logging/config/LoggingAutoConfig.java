@@ -14,6 +14,7 @@ public class LoggingAutoConfig {
     /**
      * 로깅용 objectMapper
      */
+    @SuppressWarnings("unchecked")
     @Bean("LoggingObjectMapper")
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();

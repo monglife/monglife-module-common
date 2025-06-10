@@ -13,6 +13,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -39,10 +40,20 @@ public class PassportFilter extends GenericFilterBean {
     public void doFilter(ServletRequest servletRequest, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
 
+        String profile = System.getProperty("spring.profiles.active");
         String passportJson = request.getHeader("passport");
+        String traceId = request.getHeader("X-Trace-Id");
 
-        if ("dev".equals(System.getProperty("spring.profiles.active")) && passportJson == null) {
-            PassportVo passportVo = PassportVo.builder()
+        if (traceId != null && !traceId.isBlank()) {
+            MDC.put("traceId", traceId);
+        }
+
+        PassportVo passportVo = null;
+
+        if (passportJson != null) {
+            passportVo = objectMapper.readValue(URLDecoder.decode(passportJson, StandardCharsets.UTF_8), PassportVo.class);
+        } else if ("dev".equals(profile)) {
+            passportVo = PassportVo.builder()
                     .data(PassportDataVo.builder()
                             .account(PassportDataAccountVo.builder()
                                     .accountId(0L)
@@ -58,17 +69,9 @@ public class PassportFilter extends GenericFilterBean {
                             .build())
                     .createdAt(LocalDateTime.now())
                     .build();
+        }
 
-            User passport = new Passport(passportVo);
-
-            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken
-                    = new UsernamePasswordAuthenticationToken(passport, null, passport.getAuthorities());
-
-            SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-
-        } else if (passportJson != null) {
-            PassportVo passportVo = objectMapper.readValue(URLDecoder.decode(passportJson, StandardCharsets.UTF_8), PassportVo.class);
-
+        if (passportVo != null) {
             User passport = new Passport(passportVo);
 
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken

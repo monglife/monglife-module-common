@@ -1,5 +1,6 @@
 package com.monglife.module.common.security.principal;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.monglife.core.utils.CommonUtil;
 import com.monglife.core.vo.passport.PassportVo;
 import lombok.Getter;
@@ -23,6 +24,7 @@ public class Passport extends User {
 
     private final String name;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "Asia/Seoul")
     private final LocalDateTime createdAt;
 
     public Passport(PassportVo passportVo) {
