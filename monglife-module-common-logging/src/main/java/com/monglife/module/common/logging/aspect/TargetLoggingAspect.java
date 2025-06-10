@@ -26,6 +26,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TargetLoggingAspect {
 
+    private final ArgsUtil argsUtil;
+
     private final LoggingUtil loggingUtil;
 
     /**
@@ -48,7 +50,7 @@ public class TargetLoggingAspect {
         String clazzName = method.getDeclaringClass().getName();
         String methodName = method.getName();
 
-        Map<String, Object> args = ArgsUtil.generateArgs(method, joinPoint.getArgs());
+        Map<String, Object> args = argsUtil.generateArgs(method, joinPoint.getArgs());
 
         try {
             if (loggingUtil.isLoggingMethod(traceId, method)) {
@@ -99,7 +101,7 @@ public class TargetLoggingAspect {
                         .className(clazzName)
                         .method(methodName)
                         .message(message)
-                        .stackTrace(ArgsUtil.generateExceptionTrace(exception))
+                        .stackTrace(argsUtil.generateExceptionTrace(exception))
                         .build();
 
                 log.error(loggingUtil.parseJson(exceptionLogDto));

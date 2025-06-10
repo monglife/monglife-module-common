@@ -1,37 +1,27 @@
 package com.monglife.module.common.logging.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
 public class ArgsUtil {
 
-    private static final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-    static {
-        JavaTimeModule javaTimeModule = new JavaTimeModule();
-        Hibernate6Module hibernate6Module = new Hibernate6Module();
-        hibernate6Module.disable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
-
-        objectMapper = new ObjectMapper();
-        objectMapper.registerModule(javaTimeModule);
-        objectMapper.registerModule(hibernate6Module);
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        objectMapper.configure(SerializationFeature.FAIL_ON_SELF_REFERENCES, false);
-        objectMapper.configure(SerializationFeature.FAIL_ON_UNWRAPPED_TYPE_IDENTIFIERS, false);
-
+    public ArgsUtil(@Qualifier("LoggingObjectMapper") ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     /**
      * 로깅을 위한 메서드 파라미터 맵 생성
      */
-    public static Map<String, Object> generateArgs(Method method, Object[] args) {
+    public Map<String, Object> generateArgs(Method method, Object[] args) {
 
         Map<String, Object> argsMap = new HashMap<>();
         Parameter[] parameters = method.getParameters();
@@ -60,7 +50,7 @@ public class ArgsUtil {
      * @param throwable 예외 객체
      * @return 예외 추적 문자열
      */
-    public static String generateExceptionTrace(Throwable throwable) {
+    public String generateExceptionTrace(Throwable throwable) {
 
         StringBuilder exceptionTraceBuilder = new StringBuilder();
         exceptionTraceBuilder.append(throwable.toString());
