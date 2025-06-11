@@ -20,17 +20,6 @@ public class LoggingUtil {
     }
 
     /**
-     * json 문자열 변환
-     */
-    public <T> String toJson(T obj) {
-        try {
-            return this.objectMapper.writeValueAsString(obj);
-        } catch (Exception ignored) {
-            return "";
-        }
-    }
-
-    /**
      * 로깅 필요 메서드 여부
      */
     public boolean isLoggingMethod(String traceId, Method method) {
@@ -40,13 +29,15 @@ public class LoggingUtil {
     /**
      * 로그 추적 ID 초기화
      */
-    public void setTraceId() {
+    public String setTraceId() {
 
         String traceId = MDC.get("traceId");
 
         if (traceId == null || traceId.isBlank()) {
             MDC.put("traceId", CommonUtil.randomId());
         }
+
+        return traceId;
     }
 
     /**
@@ -60,12 +51,14 @@ public class LoggingUtil {
     /**
      * 로그 추적 오프셋 조회 (없는 경우 초기화)
      */
-    public void setTraceOffset() {
+    public int setTraceOffset() {
         int traceOffset = this.convertTraceOffset(MDC.get("traceOffset"));
 
         if (traceOffset == Integer.MIN_VALUE) {
             MDC.put("traceOffset", "-1");
         }
+
+        return traceOffset;
     }
 
     /**
@@ -91,11 +84,14 @@ public class LoggingUtil {
     /**
      * 엔터리 메서드 이름
      */
-    public void setEntryMethod(Method method) {
+    public String setEntryMethod(Method method) {
         String clazzName = method.getDeclaringClass().getName();
         String methodName = method.getName();
+        String entryMethod = String.format("%s#%s", clazzName, methodName);
 
-        MDC.put("entryMethod", String.format("%s#%s", clazzName, methodName));
+        MDC.put("entryMethod", entryMethod);
+
+        return entryMethod;
     }
 
     /**
