@@ -1,7 +1,6 @@
 package com.monglife.module.common.logging.aspect;
 
 import com.monglife.module.common.logging.utils.LoggingUtil;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 
-@Slf4j
 @Order(Integer.MAX_VALUE - 1)
 @Aspect
 @Component

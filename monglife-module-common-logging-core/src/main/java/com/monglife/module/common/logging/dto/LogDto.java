@@ -20,7 +20,7 @@ public class LogDto {
 
     private String method;
 
-    private LogType logType;
+    private String logType;
 
     public LogDto(String traceId, Integer traceOffset, String entryMethod, String className, String method, LogType logType) {
         this.traceId = traceId;
@@ -28,6 +28,6 @@ public class LogDto {
         this.entryMethod = entryMethod;
         this.className = className;
         this.method = method;
-        this.logType = logType;
+        this.logType = logType.getName();
     }
 }

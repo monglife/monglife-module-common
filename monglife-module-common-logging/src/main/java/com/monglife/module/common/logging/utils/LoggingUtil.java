@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.monglife.core.utils.CommonUtil;
 import com.monglife.module.common.logging.annotation.DisableLogging;
 import com.monglife.module.common.logging.dto.LogDto;
+import com.monglife.module.common.logging.enums.LoggerType;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,46 @@ public class LoggingUtil {
 
     public LoggingUtil(@Qualifier("LoggingObjectMapper") ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Log Dto Json 직렬화
+     * @param logDto 로그 Dto
+     * @return Json 직렬화 문자열
+     */
+    private String parseJson(LogDto logDto) {
+        try {
+            return objectMapper.writeValueAsString(logDto);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    /**
+     * INFO 로그 출력
+     * @param logDto 로그 Dto
+     * @param loggerType 로거 타입
+     */
+    public void printInfoLog(LogDto logDto, LoggerType loggerType) {
+        LoggerFactory.getLogger(loggerType.getLoggerName()).info("{}", this.parseJson(logDto));
+    }
+
+    /**
+     * DEBUG 로그 출력
+     * @param logDto 로그 Dto
+     * @param loggerType 로거 타입
+     */
+    public void printDebugLog(LogDto logDto, LoggerType loggerType) {
+        LoggerFactory.getLogger(loggerType.getLoggerName()).debug("{}", this.parseJson(logDto));
+    }
+
+    /**
+     * ERROR 로그 출력
+     * @param logDto 로그 Dto
+     * @param loggerType 로거 타입
+     */
+    public void printErrorLog(LogDto logDto, LoggerType loggerType) {
+        LoggerFactory.getLogger(loggerType.getLoggerName()).error("{}", this.parseJson(logDto));
     }
 
     /**
@@ -107,19 +149,6 @@ public class LoggingUtil {
      */
     public void clear() {
         MDC.clear();
-    }
-
-    /**
-     * Log Dto Json 직렬화
-     * @param logDto 로그 Dto
-     * @return Json 직렬화 문자열
-     */
-    public String parseJson(LogDto logDto) {
-        try {
-            return objectMapper.writeValueAsString(logDto);
-        } catch (Exception e) {
-            return "";
-        }
     }
 
     /**

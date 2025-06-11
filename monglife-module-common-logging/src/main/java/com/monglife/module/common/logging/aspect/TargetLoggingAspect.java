@@ -4,10 +4,10 @@ import com.monglife.core.exception.ErrorException;
 import com.monglife.module.common.logging.dto.ExceptionLogDto;
 import com.monglife.module.common.logging.dto.MethodCallDto;
 import com.monglife.module.common.logging.dto.MethodReturnLogDto;
+import com.monglife.module.common.logging.enums.LoggerType;
 import com.monglife.module.common.logging.utils.ArgsUtil;
 import com.monglife.module.common.logging.utils.LoggingUtil;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -18,7 +18,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.lang.reflect.Method;
 
-@Slf4j
 @Aspect
 @Component
 @Profile("!test")
@@ -62,7 +61,7 @@ public class TargetLoggingAspect {
                         .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
                         .build();
 
-                log.info(loggingUtil.parseJson(methodCallDto));
+                loggingUtil.printInfoLog(methodCallDto, LoggerType.LOGSTASH_LOGGER);
 
                 Object returnValue = joinPoint.proceed();
 
@@ -76,7 +75,7 @@ public class TargetLoggingAspect {
                         .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
                         .build();
 
-                log.info(loggingUtil.parseJson(methodReturnLogDto));
+                loggingUtil.printInfoLog(methodReturnLogDto, LoggerType.LOGSTASH_LOGGER);
 
                 return returnValue;
 
@@ -107,7 +106,7 @@ public class TargetLoggingAspect {
                         .stackTrace(argsUtil.generateExceptionTrace(exception, 1))
                         .build();
 
-                log.info(loggingUtil.parseJson(exceptionLogDto));
+                loggingUtil.printInfoLog(exceptionLogDto, LoggerType.LOGSTASH_LOGGER);
             }
 
             throw exception;
@@ -135,7 +134,8 @@ public class TargetLoggingAspect {
                         .stackTrace(argsUtil.generateExceptionTrace(exception))
                         .build();
 
-                log.error(loggingUtil.parseJson(exceptionLogDto));
+                loggingUtil.printErrorLog(exceptionLogDto, LoggerType.CONSOLE_LOGGER);
+                loggingUtil.printErrorLog(exceptionLogDto, LoggerType.LOGSTASH_LOGGER);
             }
 
             throw exception;
