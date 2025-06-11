@@ -1,7 +1,6 @@
 package com.monglife.module.common.logging.aspect;
 
 import com.monglife.core.exception.ErrorException;
-import com.monglife.module.common.logging.annotation.EntryLoggingPoint;
 import com.monglife.module.common.logging.dto.ExceptionLogDto;
 import com.monglife.module.common.logging.dto.MethodCallDto;
 import com.monglife.module.common.logging.dto.MethodReturnLogDto;
@@ -86,7 +85,7 @@ public class TargetLoggingAspect {
             }
 
         } catch (ErrorException exception) {
-            if (loggingUtil.isLoggingMethod(method) && method.isAnnotationPresent(EntryLoggingPoint.class)) {
+            if (loggingUtil.isLoggingMethod(method)) {
                 String message = exception.getErrorCode() == null ? "" : exception.getErrorCode().getMessage();
 
                 String clazzName = "";
@@ -114,7 +113,7 @@ public class TargetLoggingAspect {
             throw exception;
 
         } catch (Exception exception) {
-            if (loggingUtil.isLoggingMethod(method) && method.isAnnotationPresent(EntryLoggingPoint.class)) {
+            if (loggingUtil.isLoggingMethod(method)) {
                 String message = exception.getMessage();
 
                 String clazzName = "";
