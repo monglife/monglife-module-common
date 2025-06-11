@@ -22,8 +22,8 @@ public class LoggingUtil {
     /**
      * 로깅 필요 메서드 여부
      */
-    public boolean isLoggingMethod(String traceId, Method method) {
-        return traceId != null && !method.isAnnotationPresent(DisableLogging.class);
+    public boolean isLoggingMethod(Method method) {
+        return MDC.get("traceId") != null && !method.isAnnotationPresent(DisableLogging.class);
     }
 
     /**

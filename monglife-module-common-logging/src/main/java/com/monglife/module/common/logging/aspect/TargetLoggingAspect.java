@@ -1,5 +1,8 @@
 package com.monglife.module.common.logging.aspect;
 
+import com.monglife.core.exception.ErrorException;
+import com.monglife.module.common.logging.annotation.EntryLoggingPoint;
+import com.monglife.module.common.logging.dto.ExceptionLogDto;
 import com.monglife.module.common.logging.dto.MethodCallDto;
 import com.monglife.module.common.logging.dto.MethodReturnLogDto;
 import com.monglife.module.common.logging.utils.ArgsUtil;
@@ -34,6 +37,9 @@ public class TargetLoggingAspect {
     @Around("com.monglife.module.common.logging.pointcut.LoggingPointcut.allPointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+
         // traceOffset 증가
         loggingUtil.increaseTraceOffset();
 
@@ -41,42 +47,99 @@ public class TargetLoggingAspect {
         int traceOffset = loggingUtil.getTraceOffset();
         String entryMethod = loggingUtil.getEntryMethod();
 
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Method method = signature.getMethod();
+        try {
+            if (loggingUtil.isLoggingMethod(method)) {
 
-        String clazzName = method.getDeclaringClass().getName();
-        String methodName = method.getName();
+                String clazzName = method.getDeclaringClass().getName();
+                String methodName = method.getName();
 
-        if (loggingUtil.isLoggingMethod(traceId, method)) {
-            MethodCallDto methodCallDto = MethodCallDto.builder()
-                    .traceId(traceId)
-                    .traceOffset(traceOffset)
-                    .entryMethod(entryMethod)
-                    .className(clazzName)
-                    .method(methodName)
-                    .args(argsUtil.generateArgs(method, joinPoint.getArgs()))
-                    .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
-                    .build();
+                MethodCallDto methodCallDto = MethodCallDto.builder()
+                        .traceId(traceId)
+                        .traceOffset(traceOffset)
+                        .entryMethod(entryMethod)
+                        .className(clazzName)
+                        .method(methodName)
+                        .args(argsUtil.generateArgs(method, joinPoint.getArgs()))
+                        .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
+                        .build();
 
-            log.info(loggingUtil.parseJson(methodCallDto));
+                log.info(loggingUtil.parseJson(methodCallDto));
+
+                Object returnValue = joinPoint.proceed();
+
+                MethodReturnLogDto methodReturnLogDto = MethodReturnLogDto.builder()
+                        .traceId(traceId)
+                        .traceOffset(traceOffset)
+                        .entryMethod(entryMethod)
+                        .className(clazzName)
+                        .method(methodName)
+                        .returnValue(returnValue)
+                        .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
+                        .build();
+
+                log.info(loggingUtil.parseJson(methodReturnLogDto));
+
+                return returnValue;
+
+            } else {
+                return joinPoint.proceed();
+            }
+
+        } catch (ErrorException exception) {
+            if (loggingUtil.isLoggingMethod(method) && method.isAnnotationPresent(EntryLoggingPoint.class)) {
+                String message = exception.getErrorCode() == null ? "" : exception.getErrorCode().getMessage();
+
+                String clazzName = "";
+                String methodName = "";
+
+                StackTraceElement[] stackTraceElements = exception.getStackTrace();
+                if (stackTraceElements.length > 0) {
+                    clazzName = stackTraceElements[0].getClassName();
+                    methodName = stackTraceElements[0].getMethodName();
+                }
+
+                ExceptionLogDto exceptionLogDto = ExceptionLogDto.builder()
+                        .traceId(traceId)
+                        .traceOffset(traceOffset)
+                        .entryMethod(entryMethod)
+                        .className(clazzName)
+                        .method(methodName)
+                        .message(message)
+                        .stackTrace(argsUtil.generateExceptionTrace(exception))
+                        .build();
+
+                log.info(loggingUtil.parseJson(exceptionLogDto));
+            }
+
+            throw exception;
+
+        } catch (Exception exception) {
+            if (loggingUtil.isLoggingMethod(method) && method.isAnnotationPresent(EntryLoggingPoint.class)) {
+                String message = exception.getMessage();
+
+                String clazzName = "";
+                String methodName = "";
+
+                StackTraceElement[] stackTraceElements = exception.getStackTrace();
+                if (stackTraceElements.length > 0) {
+                    clazzName = stackTraceElements[0].getClassName();
+                    methodName = stackTraceElements[0].getMethodName();
+                }
+
+                ExceptionLogDto exceptionLogDto = ExceptionLogDto.builder()
+                        .traceId(traceId)
+                        .traceOffset(traceOffset)
+                        .entryMethod(entryMethod)
+                        .className(clazzName)
+                        .method(methodName)
+                        .message(message)
+                        .stackTrace(argsUtil.generateExceptionTrace(exception))
+                        .build();
+
+                log.error(loggingUtil.parseJson(exceptionLogDto));
+            }
+
+            throw exception;
         }
-
-        Object returnValue = joinPoint.proceed();
-
-        if (loggingUtil.isLoggingMethod(traceId, method)) {
-            MethodReturnLogDto methodReturnLogDto = MethodReturnLogDto.builder()
-                    .traceId(traceId)
-                    .traceOffset(traceOffset)
-                    .entryMethod(entryMethod)
-                    .className(clazzName)
-                    .method(methodName)
-                    .returnValue(returnValue)
-                    .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
-                    .build();
-
-            log.info(loggingUtil.parseJson(methodReturnLogDto));
-        }
-
-        return returnValue;
     }
 }
