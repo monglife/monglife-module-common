@@ -104,7 +104,7 @@ public class TargetLoggingAspect {
                         .className(clazzName)
                         .method(methodName)
                         .message(message)
-                        .stackTrace(argsUtil.generateExceptionTrace(exception))
+                        .stackTrace(argsUtil.generateExceptionTrace(exception, 0))
                         .build();
 
                 log.info(loggingUtil.parseJson(exceptionLogDto));

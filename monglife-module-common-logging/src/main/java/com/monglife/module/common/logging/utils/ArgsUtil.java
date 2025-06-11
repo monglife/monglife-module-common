@@ -51,37 +51,49 @@ public class ArgsUtil {
      * @return 예외 추적 문자열
      */
     public String generateExceptionTrace(Throwable throwable) {
+        return this.generateExceptionTrace(throwable, Integer.MAX_VALUE);
+    }
+
+    /**
+     * 예외 추적 문자열 생성
+     * @param throwable 예외 객체
+     * @param stackTraceLimit 출력할 스택 최대 트레이스 수
+     * @return 예외 추적 문자열
+     */
+    public String generateExceptionTrace(Throwable throwable, int stackTraceLimit) {
 
         StringBuilder exceptionTraceBuilder = new StringBuilder();
         exceptionTraceBuilder.append(throwable.toString());
 
-        for (StackTraceElement stackTraceElement : throwable.getStackTrace()) {
+        for (int index = 0; index < Math.min(stackTraceLimit, throwable.getStackTrace().length); index++) {
             exceptionTraceBuilder
                     .append("\tat ")
-                    .append(stackTraceElement);
+                    .append(throwable.getStackTrace()[index]);
         }
 
         Throwable cause = throwable.getCause();
 
-        while(cause != null) {
-            exceptionTraceBuilder
-                    .append("Caused by: ")
-                    .append(cause);
-
-            for (StackTraceElement stackTraceElement : cause.getStackTrace()) {
+        if (stackTraceLimit == Integer.MAX_VALUE) {
+            while (cause != null) {
                 exceptionTraceBuilder
-                        .append("\tat ")
-                        .append(stackTraceElement);
-            }
+                        .append("Caused by: ")
+                        .append(cause);
 
-            cause = cause.getCause();
+                for (StackTraceElement stackTraceElement : cause.getStackTrace()) {
+                    exceptionTraceBuilder
+                            .append("\tat ")
+                            .append(stackTraceElement);
+                }
+
+                cause = cause.getCause();
+            }
         }
 
         return exceptionTraceBuilder.toString();
     }
 
     /**
-     * monglife 패키지 해위 여부 확인
+     * monglife 패키지 하위 여부 확인
      * @param arg 메서드 파라 미터
      * @return monglife 패키지 하위 여부
      */
