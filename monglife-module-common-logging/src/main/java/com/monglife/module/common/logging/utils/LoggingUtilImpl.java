@@ -13,25 +13,12 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Method;
 
 @Component
-public class LoggingUtil {
+public class LoggingUtilImpl implements LoggingUtil {
 
     private final ObjectMapper objectMapper;
 
-    public LoggingUtil(@Qualifier("LoggingObjectMapper") ObjectMapper objectMapper) {
+    public LoggingUtilImpl(@Qualifier("LoggingObjectMapper") ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-    }
-
-    /**
-     * Log Dto Json 직렬화
-     * @param logDto 로그 Dto
-     * @return Json 직렬화 문자열
-     */
-    private String parseJson(LogDto logDto) {
-        try {
-            return objectMapper.writeValueAsString(logDto);
-        } catch (Exception e) {
-            return "";
-        }
     }
 
     /**
@@ -39,6 +26,7 @@ public class LoggingUtil {
      * @param logDto 로그 Dto
      * @param loggerType 로거 타입
      */
+    @Override
     public void printInfoLog(LogDto logDto, LoggerType loggerType) {
         LoggerFactory.getLogger(loggerType.getLoggerName()).info("{}", this.parseJson(logDto));
     }
@@ -48,6 +36,7 @@ public class LoggingUtil {
      * @param logDto 로그 Dto
      * @param loggerType 로거 타입
      */
+    @Override
     public void printDebugLog(LogDto logDto, LoggerType loggerType) {
         LoggerFactory.getLogger(loggerType.getLoggerName()).debug("{}", this.parseJson(logDto));
     }
@@ -57,6 +46,7 @@ public class LoggingUtil {
      * @param logDto 로그 Dto
      * @param loggerType 로거 타입
      */
+    @Override
     public void printErrorLog(LogDto logDto, LoggerType loggerType) {
         LoggerFactory.getLogger(loggerType.getLoggerName()).error("{}", this.parseJson(logDto));
     }
@@ -64,6 +54,7 @@ public class LoggingUtil {
     /**
      * 로깅 필요 메서드 여부
      */
+    @Override
     public boolean isLoggingMethod(Method method) {
         return MDC.get("traceId") != null && !method.isAnnotationPresent(DisableLogging.class);
     }
@@ -71,6 +62,7 @@ public class LoggingUtil {
     /**
      * 로그 추적 ID 초기화
      */
+    @Override
     public String setTraceId() {
 
         String traceId = MDC.get("traceId");
@@ -86,6 +78,7 @@ public class LoggingUtil {
      * 로그 추적 ID 조회
      * @return 로그 추적 ID
      */
+    @Override
     public String getTraceId() {
         return MDC.get("traceId");
     }
@@ -93,6 +86,7 @@ public class LoggingUtil {
     /**
      * 로그 추적 오프셋 조회 (없는 경우 초기화)
      */
+    @Override
     public int setTraceOffset() {
         int traceOffset = this.convertTraceOffset(MDC.get("traceOffset"));
 
@@ -106,6 +100,7 @@ public class LoggingUtil {
     /**
      * 로그 추적 오프셋 증가
      */
+    @Override
     public void increaseTraceOffset() {
         int traceOffset = this.convertTraceOffset(MDC.get("traceOffset"));
 
@@ -119,6 +114,7 @@ public class LoggingUtil {
      * 로그 추적 오프셋 조회
      * @return 로그 추적 오프셋
      */
+    @Override
     public int getTraceOffset() {
         return this.convertTraceOffset(MDC.get("traceOffset"));
     }
@@ -126,6 +122,7 @@ public class LoggingUtil {
     /**
      * 엔터리 메서드 이름
      */
+    @Override
     public String setEntryMethod(Method method) {
         String clazzName = method.getDeclaringClass().getName();
         String methodName = method.getName();
@@ -140,6 +137,7 @@ public class LoggingUtil {
      * 엔터리 메서드 조회
      * @return 엔터리 메서드
      */
+    @Override
     public String getEntryMethod() {
         return MDC.get("entryMethod") == null ? "" : MDC.get("entryMethod");
     }
@@ -147,8 +145,22 @@ public class LoggingUtil {
     /**
      * 스레드 캐시 삭제
      */
+    @Override
     public void clear() {
         MDC.clear();
+    }
+
+    /**
+     * Log Dto Json 직렬화
+     * @param logDto 로그 Dto
+     * @return Json 직렬화 문자열
+     */
+    private String parseJson(LogDto logDto) {
+        try {
+            return objectMapper.writeValueAsString(logDto);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     /**
