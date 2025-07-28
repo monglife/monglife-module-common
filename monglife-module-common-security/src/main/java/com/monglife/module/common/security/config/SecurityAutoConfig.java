@@ -44,7 +44,7 @@ public class SecurityAutoConfig {
                     .requestMatchers("/api/public/**", "/prometheus").permitAll()
                     .requestMatchers("/api/admin/**").hasAnyAuthority(RoleCode.ADMIN.getRole())
                     .requestMatchers("/api/**").hasAnyAuthority(RoleCode.ADMIN.getRole(), RoleCode.NORMAL.getRole())
-                    .anyRequest().denyAll()
+                    .anyRequest().authenticated()
             )
             .exceptionHandling(configurer -> {
                 configurer.authenticationEntryPoint(unAuthorizationHandler);
