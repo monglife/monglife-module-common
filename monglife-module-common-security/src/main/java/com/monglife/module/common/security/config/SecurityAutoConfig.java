@@ -41,7 +41,7 @@ public class SecurityAutoConfig {
             .addFilterBefore(passportFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(globalExceptionFilter, PassportFilter.class)
             .authorizeHttpRequests(authorize -> authorize
-                    .requestMatchers("/public/**", "/prometheus").permitAll()
+                    .requestMatchers("/public/**").permitAll()
                     .requestMatchers("/admin/**").hasAuthority(RoleCode.ADMIN.getRole())
                     .requestMatchers("/**").hasAnyAuthority(RoleCode.ADMIN.getRole(), RoleCode.NORMAL.getRole())
                     .anyRequest().authenticated()
