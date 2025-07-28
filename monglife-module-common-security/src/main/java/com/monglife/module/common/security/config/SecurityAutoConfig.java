@@ -9,6 +9,7 @@ import com.monglife.module.common.security.filter.GlobalExceptionFilter;
 import com.monglife.module.common.security.filter.PassportFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,6 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityAutoConfig {
 
     @Bean
+    @ConditionalOnMissingBean
     public SecurityFilterChain filterChain(
             @Autowired UnAuthorizationHandler unAuthorizationHandler,
             @Autowired ForbiddenHandler forbiddenHandler,
@@ -39,7 +41,7 @@ public class SecurityAutoConfig {
             .addFilterBefore(passportFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(globalExceptionFilter, PassportFilter.class)
             .authorizeHttpRequests(authorize -> authorize
-                    .requestMatchers("/prometheus").permitAll()
+                    .requestMatchers("/api/public/**", "/prometheus").permitAll()
                     .requestMatchers("/api/admin/**").hasAnyAuthority(RoleCode.ADMIN.getRole())
                     .requestMatchers("/api/**").hasAnyAuthority(RoleCode.ADMIN.getRole(), RoleCode.NORMAL.getRole())
                     .anyRequest().denyAll()
