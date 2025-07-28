@@ -52,7 +52,7 @@ public class PassportFilter extends GenericFilterBean {
 
         if (passportJson != null) {
             passportVo = objectMapper.readValue(URLDecoder.decode(passportJson, StandardCharsets.UTF_8), PassportVo.class);
-        } else if ("dev".equals(profile)) {
+        } else if ("local".equals(profile)) {
             passportVo = PassportVo.builder()
                     .data(PassportDataVo.builder()
                             .account(PassportDataAccountVo.builder()
