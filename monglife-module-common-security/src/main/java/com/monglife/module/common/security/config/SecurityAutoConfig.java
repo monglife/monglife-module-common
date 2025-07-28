@@ -40,8 +40,9 @@ public class SecurityAutoConfig {
             .addFilterBefore(globalExceptionFilter, PassportFilter.class)
             .authorizeHttpRequests(authorize -> authorize
                     .requestMatchers("/prometheus").permitAll()
-                    .requestMatchers("/**").hasAnyAuthority(RoleCode.ADMIN.getRole(), RoleCode.NORMAL.getRole())
-                    .anyRequest().authenticated()
+                    .requestMatchers("/api/admin/**").hasAnyAuthority(RoleCode.ADMIN.getRole())
+                    .requestMatchers("/api/**").hasAnyAuthority(RoleCode.ADMIN.getRole(), RoleCode.NORMAL.getRole())
+                    .anyRequest().denyAll()
             )
             .exceptionHandling(configurer -> {
                 configurer.authenticationEntryPoint(unAuthorizationHandler);
