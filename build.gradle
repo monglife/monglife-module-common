@@ -4,7 +4,7 @@ buildscript {
         springDependencyManagementVersion = "1.1.4"
         lombokVersion                     = "1.18.30"
         monglifeCoreVersion               = "2.1.0"
-        monglifeModuleCommonVersion       = "2.2.0"
+        monglifeModuleCommonVersion       = "2.2.1"
         jupiterVersion                    = "5.9.3"
         mockitoVersion                    = "4.8.1"
         assertjVersion                    = "3.24.2"
