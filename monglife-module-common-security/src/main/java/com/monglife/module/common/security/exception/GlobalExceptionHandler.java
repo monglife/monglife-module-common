@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
 
-@RestControllerAdvice(basePackages = "com.monglife.*")
+@RestControllerAdvice(basePackages = "com.monglife")
 public class GlobalExceptionHandler {
 
     /**
