@@ -5,16 +5,13 @@ import com.monglife.module.common.security.response.SecurityResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
 import java.io.IOException;
 
-
 @AllArgsConstructor
 public class ForbiddenHandler implements AccessDeniedHandler {
-
 
     private final ObjectMapper objectMapper;
 

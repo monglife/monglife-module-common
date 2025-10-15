@@ -3,6 +3,7 @@ package com.monglife.module.common.security.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.monglife.core.dto.response.ResponseDto;
 import com.monglife.core.enums.response.GlobalResponse;
+import com.monglife.module.common.security.response.SecurityResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -10,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.filter.GenericFilterBean;
 
 import java.io.IOException;
@@ -37,6 +39,10 @@ public class GlobalExceptionFilter extends GenericFilterBean {
 
         try {
             chain.doFilter(request, response);
+        } catch (AccessDeniedException e) {
+            response.setContentType("application/json; charset=UTF-8");
+            response.setStatus(SecurityResponse.SECURITY_FORBIDDEN.getHttpStatus());
+            response.getWriter().write(objectMapper.writeValueAsString(SecurityResponse.SECURITY_FORBIDDEN.toResponseDto()));
         } catch (Exception e) {
             ResponseDto<Map<String, Object>> responseDto = GlobalResponse.INTERNAL_SERVER_ERROR.toResponseDto(Collections.singletonMap("error", e.getMessage()));
             response.setContentType("application/json; charset=UTF-8");

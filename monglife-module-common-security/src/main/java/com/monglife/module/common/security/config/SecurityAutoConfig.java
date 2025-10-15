@@ -20,6 +20,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.Arrays;
+
 @EnableWebSecurity
 @EnableMethodSecurity
 @AutoConfiguration
@@ -43,7 +45,7 @@ public class SecurityAutoConfig {
             .authorizeHttpRequests(authorize -> authorize
                     .requestMatchers("/public/**").permitAll()
                     .requestMatchers("/admin/**").hasAuthority(RoleCode.ADMIN.getRole())
-                    .requestMatchers("/**").hasAnyAuthority(RoleCode.ADMIN.getRole(), RoleCode.NORMAL.getRole())
+                    .requestMatchers("/**").hasAnyAuthority(Arrays.stream(RoleCode.values()).map(RoleCode::getRole).toArray(String[]::new))
                     .anyRequest().authenticated()
             )
             .exceptionHandling(configurer -> {

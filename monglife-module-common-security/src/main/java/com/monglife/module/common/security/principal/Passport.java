@@ -1,6 +1,7 @@
 package com.monglife.module.common.security.principal;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.monglife.core.enums.role.RoleCode;
 import com.monglife.core.utils.CommonUtil;
 import com.monglife.core.vo.passport.PassportVo;
 import lombok.Getter;
@@ -24,6 +25,8 @@ public class Passport extends User {
 
     private final String name;
 
+    private final String role;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "Asia/Seoul")
     private final LocalDateTime createdAt;
 
@@ -40,6 +43,7 @@ public class Passport extends User {
         this.deviceId = passportVo.getData().getAccount().getDeviceId();
         this.email = passportVo.getData().getAccount().getEmail();
         this.name = passportVo.getData().getAccount().getName();
+        this.role = passportVo.getData().getAccount().getRole();
         this.createdAt = passportVo.getCreatedAt();
     }
 }
