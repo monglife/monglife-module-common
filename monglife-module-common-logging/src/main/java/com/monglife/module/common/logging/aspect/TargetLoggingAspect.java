@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 @Aspect
 @Component
@@ -65,13 +66,21 @@ public class TargetLoggingAspect {
 
                 Object returnValue = joinPoint.proceed();
 
+                // Optional 처리
+                Object finalReturnValue;
+                if (returnValue instanceof Optional<?> optional) {
+                    finalReturnValue = optional.orElse(null);
+                } else {
+                    finalReturnValue = returnValue;
+                }
+
                 MethodReturnLogDto methodReturnLogDto = MethodReturnLogDto.builder()
                         .traceId(traceId)
                         .traceOffset(traceOffset)
                         .entryMethod(entryMethod)
                         .className(clazzName)
                         .method(methodName)
-                        .returnValue(returnValue)
+                        .returnValue(finalReturnValue)
                         .transaction(TransactionSynchronizationManager.getCurrentTransactionName())
                         .build();
 
