@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -38,21 +39,22 @@ public class SecurityAutoConfig {
     ) throws Exception {
 
         return http
-            .csrf(AbstractHttpConfigurer::disable)
-            .formLogin(AbstractHttpConfigurer::disable)
-            .addFilterBefore(passportFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(globalExceptionFilter, PassportFilter.class)
-            .authorizeHttpRequests(authorize -> authorize
-                    .requestMatchers("/public/**").permitAll()
-                    .requestMatchers("/admin/**").hasAuthority(RoleCode.ADMIN.getRole())
-                    .requestMatchers("/**").hasAnyAuthority(Arrays.stream(RoleCode.values()).map(RoleCode::getRole).toArray(String[]::new))
-                    .anyRequest().authenticated()
-            )
-            .exceptionHandling(configurer -> {
-                configurer.authenticationEntryPoint(unAuthorizationHandler);
-                configurer.accessDeniedHandler(forbiddenHandler);
-            })
-            .build();
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .addFilterBefore(passportFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(globalExceptionFilter, PassportFilter.class)
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/public/**").permitAll()
+                        .requestMatchers("/admin/**").hasAuthority(RoleCode.ADMIN.getRole())
+                        .requestMatchers("/**").hasAnyAuthority(Arrays.stream(RoleCode.values()).map(RoleCode::getRole).toArray(String[]::new))
+                        .anyRequest().authenticated()
+                )
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .exceptionHandling(configurer -> {
+                    configurer.authenticationEntryPoint(unAuthorizationHandler);
+                    configurer.accessDeniedHandler(forbiddenHandler);
+                })
+                .build();
     }
 
     @Bean
