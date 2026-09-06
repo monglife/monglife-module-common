@@ -23,4 +23,9 @@ public class MethodReturnLogDto extends LogDto {
         this.returnValue = returnValue;
         this.transaction = transaction;
     }
+
+    @Override
+    public String getDetailMessage() {
+        return String.format("%s | %s", transaction, returnValue);
+    }
 }

@@ -62,7 +62,7 @@ public class KafkaAutoConfig {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, TransactionEventDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, kafkaModuleProperties.getAutoOffsetResetConfig());
         props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, kafkaModuleProperties.getIsolationLevelConfig());
-        props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.monglife.module.common.kafka.event");
+        // props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.monglife.module.common.kafka.event");
 
         return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new TransactionEventDeserializer<>(objectMapper));
     }

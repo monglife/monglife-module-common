@@ -28,7 +28,11 @@ public class LoggingUtilImpl implements LoggingUtil {
      */
     @Override
     public void printInfoLog(LogDto logDto, LoggerType loggerType) {
-        LoggerFactory.getLogger(loggerType.getLoggerName()).info("{}", this.parseJson(logDto));
+        if (LoggerType.LOGSTASH_LOGGER.equals(loggerType)) {
+            LoggerFactory.getLogger(loggerType.getLoggerName()).info("{}", this.parseJson(logDto));
+        } else {
+            LoggerFactory.getLogger(loggerType.getLoggerName()).info("{}", logDto.getConsoleMessage());
+        }
     }
 
     /**
@@ -38,7 +42,11 @@ public class LoggingUtilImpl implements LoggingUtil {
      */
     @Override
     public void printDebugLog(LogDto logDto, LoggerType loggerType) {
-        LoggerFactory.getLogger(loggerType.getLoggerName()).debug("{}", this.parseJson(logDto));
+        if (LoggerType.LOGSTASH_LOGGER.equals(loggerType)) {
+            LoggerFactory.getLogger(loggerType.getLoggerName()).debug("{}", this.parseJson(logDto));
+        } else {
+            LoggerFactory.getLogger(loggerType.getLoggerName()).debug("{}", logDto.getConsoleMessage());
+        }
     }
 
     /**
@@ -48,7 +56,11 @@ public class LoggingUtilImpl implements LoggingUtil {
      */
     @Override
     public void printErrorLog(LogDto logDto, LoggerType loggerType) {
-        LoggerFactory.getLogger(loggerType.getLoggerName()).error("{}", this.parseJson(logDto));
+        if (LoggerType.LOGSTASH_LOGGER.equals(loggerType)) {
+            LoggerFactory.getLogger(loggerType.getLoggerName()).error("{}", this.parseJson(logDto));
+        } else {
+            LoggerFactory.getLogger(loggerType.getLoggerName()).error("{}", logDto.getConsoleMessage());
+        }
     }
 
     /**

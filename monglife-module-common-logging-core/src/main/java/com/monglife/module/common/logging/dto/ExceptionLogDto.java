@@ -17,10 +17,15 @@ public class ExceptionLogDto extends LogDto {
 
     private String stackTrace;
 
-    @Builder()
+    @Builder
     public ExceptionLogDto(String traceId, Integer traceOffset, String entryMethod, String className, String method, String message, String stackTrace) {
         super(traceId, traceOffset, entryMethod, className, method, BasicLogType.EXCEPTION);
         this.message = message;
         this.stackTrace = stackTrace;
+    }
+
+    @Override
+    public String getDetailMessage() {
+        return String.format("%s | %s", message, stackTrace);
     }
 }

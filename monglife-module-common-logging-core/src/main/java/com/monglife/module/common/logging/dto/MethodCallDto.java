@@ -25,4 +25,9 @@ public class MethodCallDto extends LogDto {
         this.args = args;
         this.transaction = transaction;
     }
+
+    @Override
+    public String getDetailMessage() {
+        return String.format("%s | %s", transaction, args);
+    }
 }

@@ -30,4 +30,12 @@ public class LogDto {
         this.method = method;
         this.logType = logType.getName();
     }
+
+    public String getConsoleMessage() {
+        return String.format("%s (%s) | %s#%s | %s", traceId, traceOffset, className, entryMethod, getDetailMessage());
+    }
+
+    public String getDetailMessage() {
+        return "";
+    }
 }
